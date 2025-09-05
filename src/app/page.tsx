@@ -2,7 +2,8 @@ import Image from "next/image";
 import { fetchJson } from "../lib/api";
 import type { Book } from "../types/book";
 export default async function Home() {
-  const books = await fetchJson<Book[]>("/api/Books");
+  // Use internal Next API route to avoid network issues
+  const books = await fetchJson<Book[]>("/api/books");
   return (
     <div className="font-sans min-h-screen p-8 sm:p-12">
       <header className="mb-8 flex items-center gap-3">
