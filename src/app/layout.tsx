@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "./cart-context";
+import CartNav from "./CartNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,11 +26,37 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <CartProvider>
+        <div className="relative overflow-x-hidden">
+          <header className="border-b border-white/10">
+            <div className="container flex items-center justify-between py-4">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md bg-[var(--accent)]" />
+                <span className="text-lg font-semibold tracking-tight">LeafSide</span>
+              </div>
+              <CartNav />
+            </div>
+          </header>
+
+          <main className="container py-8">
+            {children}
+          </main>
+
+          <footer className="mt-8 border-t border-white/10">
+            <div className="container py-6 text-sm text-[var(--muted)] flex items-center justify-between">
+              <span>© {new Date().getFullYear()} LeafSide</span>
+              <div className="flex items-center gap-4">
+                <a href="#" className="hover:text-[var(--foreground)]">Политика</a>
+                <a href="#" className="hover:text-[var(--foreground)]">Условия</a>
+              </div>
+            </div>
+          </footer>
+        </div>
+        </CartProvider>
       </body>
     </html>
   );
 }
+
+// moved to client component in ./CartNav

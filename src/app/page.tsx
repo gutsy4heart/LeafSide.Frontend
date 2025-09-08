@@ -5,26 +5,40 @@ export default async function Home() {
   // Use internal Next API route to avoid network issues
   const books = await fetchJson<Book[]>("/api/books");
   return (
-    <div className="font-sans min-h-screen p-8 sm:p-12">
-      <header className="mb-8 flex items-center gap-3">
-        <Image className="dark:invert" src="/next.svg" alt="Logo" width={40} height={40} />
-        <h1 className="text-2xl font-semibold">LeafSide — Книги</h1>
-      </header>
-      <main className="grid gap-6 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
+    <div className="space-y-10">
+      <section className="relative overflow-hidden rounded-2xl card">
+        <div className="absolute inset-0 opacity-40" style={{
+          background: "radial-gradient(1200px 400px at 10% -10%, rgba(52,211,153,0.25), transparent), radial-gradient(800px 400px at 90% -20%, rgba(59,130,246,0.18), transparent)"
+        }} />
+        <div className="relative px-6 py-12 sm:px-10 sm:py-16">
+          <div className="max-w-2xl">
+            <h1 className="text-3xl sm:text-4xl font-semibold leading-tight tracking-tight">Найдите свою следующую книгу</h1>
+            <p className="mt-3 text-[var(--muted)]">Каталог тщательно отобранных изданий: от художественной литературы до нон‑фикшн.</p>
+            <div className="mt-6 flex items-center gap-3">
+              <a href="#catalog" className="btn-accent">Смотреть каталог</a>
+              <a href="#" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Узнать больше</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <main id="catalog" className="grid gap-6 sm:gap-7 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
         {books.map((b) => (
-          <article key={b.id} className="rounded-lg border p-4 bg-white/50 dark:bg-black/20">
-            <div className="aspect-[3/4] mb-3 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+          <a key={b.id} href={`/books/${b.id}`} className="card p-4 block hover:translate-y-[-2px] transition-transform">
+            <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)]">
               {b.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
               ) : null}
             </div>
-            <h2 className="font-medium line-clamp-2">{b.title}</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300">{b.author}</p>
+            <h2 className="font-medium leading-snug line-clamp-2">{b.title}</h2>
+            <p className="text-sm text-[var(--muted)]">{b.author}</p>
             {b.price != null && (
-              <p className="mt-1 font-semibold">{b.price.toFixed(2)} ₸</p>
+              <p className="mt-1 font-semibold">
+                {b.price.toFixed(2)} ₸
+              </p>
             )}
-          </article>
+          </a>
         ))}
       </main>
     </div>
