@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingConnection, setCheckingConnection] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,16 +30,25 @@ export default function LoginPage() {
       if (!res.ok) {
         const errorText = await res.text();
         let errorMessage = "Ошибка входа";
+        let errorDetails = "";
         
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.message || errorData.error || errorMessage;
+          errorDetails = errorData.details || "";
         } catch {
           // Если не удалось распарсить JSON, используем текст ошибки
           errorMessage = errorText || errorMessage;
         }
         
-        throw new Error(errorMessage);
+        // Специальная обработка для ошибки подключения к бэкенду
+        if (res.status === 502) {
+          errorMessage = "Сервер недоступен";
+          errorDetails = "Проверьте, что бэкенд запущен. Попробуйте запустить: cd LeafSide-backend && dotnet run --project LeafSide.API";
+        }
+        
+        const fullError = errorDetails ? `${errorMessage}\n\n${errorDetails}` : errorMessage;
+        throw new Error(fullError);
       }
       
       const data = await res.json();
@@ -56,6 +66,28 @@ export default function LoginPage() {
       setError(err?.message ?? "Произошла ошибка при входе. Проверьте данные и попробуйте снова.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkConnection = async () => {
+    setCheckingConnection(true);
+    setError(null);
+    
+    try {
+      const res = await fetch("/api/account/login", {
+        method: "POST",
+        body: new FormData()
+      });
+      
+      if (res.status === 502) {
+        setError("Сервер недоступен. Проверьте, что бэкенд запущен на порту 5233.");
+      } else {
+        setError("Сервер отвечает, но есть проблемы с подключением.");
+      }
+    } catch (err) {
+      setError("Не удалось подключиться к серверу.");
+    } finally {
+      setCheckingConnection(false);
     }
   };
 
@@ -103,7 +135,7 @@ export default function LoginPage() {
           </div>
           
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -111,7 +143,14 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
+                  <div className="text-sm text-red-800 whitespace-pre-line">
+                    {error}
+                  </div>
+                  {error.includes("Сервер недоступен") && (
+                    <div className="mt-2 text-xs text-red-600">
+                      💡 Убедитесь, что бэкенд запущен в отдельном терминале
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -140,16 +179,39 @@ export default function LoginPage() {
             )}
           </button>
           
-          <div className="text-center">
-            <p className="text-sm text-[var(--muted)]">
-              Нет аккаунта?{" "}
-              <a 
-                className="text-blue-600 hover:text-blue-500 font-medium transition-colors" 
-                href="/register"
+          <div className="space-y-4">
+            <div className="text-center">
+              <p className="text-sm text-[var(--muted)]">
+                Нет аккаунта?{" "}
+                <a 
+                  className="text-blue-600 hover:text-blue-500 font-medium transition-colors" 
+                  href="/register"
+                >
+                  Зарегистрироваться
+                </a>
+              </p>
+            </div>
+            
+            <div className="border-t border-gray-200 pt-4">
+              <button
+                type="button"
+                onClick={checkConnection}
+                disabled={checkingConnection}
+                className="w-full text-sm text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50"
               >
-                Зарегистрироваться
-              </a>
-            </p>
+                {checkingConnection ? (
+                  <>
+                    <svg className="animate-spin w-4 h-4 inline mr-2" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Проверка подключения...
+                  </>
+                ) : (
+                  "🔍 Проверить подключение к серверу"
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
