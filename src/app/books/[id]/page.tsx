@@ -1,48 +1,90 @@
-import type { Book } from "@/src/types/book";
-import { fetchJson } from "@/src/lib/api";
-import Image from "next/image";
-import { useCart } from "@/src/app/cart-context";
-import { Suspense } from "react";
+import type { Book } from "@/types/book";
+import { fetchJson } from "@/lib/api";
+import { notFound } from "next/navigation";
+import AddToCartButton from "./add-to-cart-button";
+import Link from "next/link";
 
 type Props = { params: { id: string } };
 
 export default async function BookDetails({ params }: Props) {
-  const book = await fetchJson<Book>(`/api/books/${params.id}`);
+  let book: Book;
+  try {
+    book = await fetchJson<Book>(`/api/books/${params.id}`);
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes(" 404")) {
+      notFound();
+    }
+    throw e;
+  }
+  
   return (
-    <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 items-start">
-      <div className="card p-4">
-        <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[var(--card)]">
-          {book.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full" />
-          )}
-        </div>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+          ← Назад к каталогу
+        </Link>
       </div>
-      <div className="space-y-4">
-        <h1 className="text-2xl font-semibold leading-tight">{book.title}</h1>
-        <p className="text-sm text-[var(--muted)]">{book.author}</p>
-        {book.price != null && (
-          <p className="text-xl font-semibold">{book.price.toFixed(2)} ₸</p>
-        )}
-        <p className="text-sm leading-relaxed text-[var(--muted)]">{book.description}</p>
-        <div className="flex items-center gap-3">
-          <AddToCartButton bookId={book.id} />
-          <a href="/" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">Назад к каталогу</a>
+      
+      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 items-start">
+        <div className="card p-6">
+          <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[var(--card)] mb-4">
+            {book.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img 
+                src={book.imageUrl} 
+                alt={book.title} 
+                className="w-full h-full object-cover transition-transform hover:scale-105" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                <span className="text-gray-400 text-lg">Изображение недоступно</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold leading-tight text-[var(--foreground)] mb-2">
+              {book.title}
+            </h1>
+            <p className="text-lg text-[var(--muted)] mb-1">
+              Автор: <span className="font-medium">{book.author}</span>
+            </p>
+            {book.genre && (
+              <p className="text-sm text-[var(--muted)]">
+                Жанр: <span className="font-medium">{book.genre}</span>
+              </p>
+            )}
+            {book.publishing && (
+              <p className="text-sm text-[var(--muted)]">
+                Издательство: <span className="font-medium">{book.publishing}</span>
+              </p>
+            )}
+          </div>
+          
+          {book.price != null && (
+            <div className="py-4">
+              <p className="text-3xl font-bold text-green-600">
+                {book.price.toFixed(2)} ₸
+              </p>
+            </div>
+          )}
+          
+          <div>
+            <h2 className="text-xl font-semibold mb-3">Описание</h2>
+            <p className="text-base leading-relaxed text-[var(--muted)]">
+              {book.description || "Описание книги пока недоступно."}
+            </p>
+          </div>
+          
+          <div className="pt-4">
+            <AddToCartButton bookId={book.id} bookTitle={book.title} />
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function AddToCartButton({ bookId }: { bookId: string }) {
-  "use client";
-  const { add } = useCart();
-  return (
-    <button className="btn-accent" onClick={() => add(bookId, 1)}>
-      Добавить в корзину
-    </button>
   );
 }
 

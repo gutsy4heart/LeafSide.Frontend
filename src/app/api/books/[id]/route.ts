@@ -31,6 +31,15 @@ export async function GET(
       });
       clearTimeout(timeout);
       if (!res.ok) {
+        // If backend says Not Found, surface 404 directly to the client
+        if (res.status === 404) {
+          const payload = await res.text();
+          try {
+            return new NextResponse(payload, { status: 404, headers: { "Content-Type": "application/json" } });
+          } catch {
+            return NextResponse.json({ error: "Not Found" }, { status: 404 });
+          }
+        }
         const text = await res.text();
         errors.push({ url, error: `${res.status} ${text}` });
         continue;

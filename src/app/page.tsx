@@ -24,20 +24,38 @@ export default async function Home() {
 
       <main id="catalog" className="grid gap-6 sm:gap-7 grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
         {books.map((b) => (
-          <a key={b.id} href={`/books/${b.id}`} className="card p-4 block hover:translate-y-[-2px] transition-transform">
-            <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)]">
+          <a 
+            key={b.id} 
+            href={`/books/${b.id}`} 
+            className="card p-4 block hover:translate-y-[-2px] hover:shadow-lg transition-all duration-200 group"
+          >
+            <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)] relative">
               {b.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={b.imageUrl} alt={b.title} className="w-full h-full object-cover" />
-              ) : null}
+                <img 
+                  src={b.imageUrl} 
+                  alt={b.title} 
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <span className="text-gray-400 text-sm">Нет изображения</span>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
             </div>
-            <h2 className="font-medium leading-snug line-clamp-2">{b.title}</h2>
-            <p className="text-sm text-[var(--muted)]">{b.author}</p>
+            <h2 className="font-medium leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+              {b.title}
+            </h2>
+            <p className="text-sm text-[var(--muted)] mt-1">{b.author}</p>
             {b.price != null && (
-              <p className="mt-1 font-semibold">
+              <p className="mt-2 font-semibold text-green-600">
                 {b.price.toFixed(2)} ₸
               </p>
             )}
+            <div className="mt-2 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              Нажмите для подробностей →
+            </div>
           </a>
         ))}
       </main>
