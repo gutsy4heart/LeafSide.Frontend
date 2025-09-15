@@ -50,7 +50,7 @@ export default async function Home() {
             <p className="text-sm text-[var(--muted)] mt-1">{b.author}</p>
             {b.price != null && (
               <p className="mt-2 font-semibold text-green-600">
-                {b.price.toFixed(2)} ₸
+                € {b.price.toFixed(2)}
               </p>
             )}
             <div className="mt-2 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

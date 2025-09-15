@@ -58,7 +58,7 @@ export default function LoginPage() {
       }
       
       // Сохраняем токен и перенаправляем на главную страницу
-      setToken(data.token);
+      await setToken(data.token);
       router.push("/");
       
     } catch (err: any) {

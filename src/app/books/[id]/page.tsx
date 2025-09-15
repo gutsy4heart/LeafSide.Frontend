@@ -67,7 +67,7 @@ export default async function BookDetails({ params }: Props) {
           {book.price != null && (
             <div className="py-4">
               <p className="text-3xl font-bold text-green-600">
-                {book.price.toFixed(2)} ₸
+                € {book.price.toFixed(2)}
               </p>
             </div>
           )}
