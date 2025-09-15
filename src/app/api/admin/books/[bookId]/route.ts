@@ -7,7 +7,7 @@ function mapToAdminBook(b: any) {
     author: b.author,
     description: b.description ?? "",
     isbn: b.isbn ?? "",
-    publishedYear: Number(new Date().getFullYear()),
+    publishedYear: Number(b.publishing ?? b.publishedYear ?? new Date().getFullYear()),
     genre: b.genre ?? "Other",
     language: b.language ?? "Russian",
     pageCount: Number(b.pageCount ?? 0),
@@ -37,16 +37,25 @@ export async function PUT(
       return NextResponse.json({ error: 'ID книги не указан' }, { status: 400 });
     }
 
-    // Convert to form-data to update catalog book
+    // Convert to form-data to update catalog book (always send all fields)
     const form = new FormData();
-    if (body.title != null) form.set("Title", body.title);
-    if (body.description != null) form.set("Description", body.description);
-    if (body.author != null) form.set("Author", body.author);
-    if (body.genre != null) form.set("Genre", body.genre);
-    if (body.publishedYear != null) form.set("Publishing", String(body.publishedYear));
-    if (body.publishedYear != null) form.set("Created", String(body.publishedYear));
-    if (body.coverImageUrl != null) form.set("ImageUrl", body.coverImageUrl);
-    if (body.price != null) form.set("Price", String(body.price));
+    const toPrice = (v: unknown) => {
+      const s = String(v ?? 0);
+      return s.includes(',') ? s : s.replace('.', ',');
+    };
+    const set = (k: string, v: unknown) => form.set(k, v != null ? String(v) : "");
+    set("Title", body.title);
+    set("Description", body.description);
+    set("Author", body.author);
+    set("Genre", body.genre);
+    set("Publishing", body.publishedYear);
+    set("Created", body.publishedYear);
+    set("ImageUrl", body.coverImageUrl ?? "https://via.placeholder.com/300x450?text=LeafSide");
+    form.set("Price", toPrice(body.price));
+    set("Isbn", body.isbn);
+    set("Language", body.language);
+    set("PageCount", body.pageCount);
+    set("IsAvailable", body.isAvailable);
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';
     const response = await fetch(`${backendUrl}/api/Books/${bookId}`, {

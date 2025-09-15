@@ -66,6 +66,12 @@ export default function AdminPage() {
     coverImageUrl: '',
     isAvailable: true
   });
+  const [newBookPublishedYearInput, setNewBookPublishedYearInput] = useState<string>(String(newBook.publishedYear));
+  const [newBookPageCountInput, setNewBookPageCountInput] = useState<string>('');
+  const [newBookPriceInput, setNewBookPriceInput] = useState<string>('');
+  const [editingBookPublishedYearInput, setEditingBookPublishedYearInput] = useState<string>('');
+  const [editingBookPageCountInput, setEditingBookPageCountInput] = useState<string>('');
+  const [editingBookPriceInput, setEditingBookPriceInput] = useState<string>('');
   const [bookSearchTerm, setBookSearchTerm] = useState('');
   const [bookGenreFilter, setBookGenreFilter] = useState('all');
   const [bookAvailabilityFilter, setBookAvailabilityFilter] = useState('all');
@@ -226,12 +232,15 @@ export default function AdminPage() {
     try {
       setCreatingBook(true);
       setBooksError(null);
+      const parsedPublishedYear = parseInt(newBookPublishedYearInput, 10);
+      const parsedPageCount = parseInt(newBookPageCountInput, 10);
+      const parsedPrice = parseFloat((newBookPriceInput || '').replace(',', '.'));
       const errs = validateBook({
         title: newBook.title,
         author: newBook.author,
-        publishedYear: newBook.publishedYear,
-        pageCount: newBook.pageCount,
-        price: newBook.price,
+        publishedYear: Number.isFinite(parsedPublishedYear) ? parsedPublishedYear : NaN,
+        pageCount: Number.isFinite(parsedPageCount) ? parsedPageCount : NaN,
+        price: Number.isFinite(parsedPrice) ? parsedPrice : NaN,
       });
       setNewBookErrors(errs);
       if (Object.keys(errs).length > 0) {
@@ -239,13 +248,20 @@ export default function AdminPage() {
         return;
       }
       
+      const payload: CreateBookRequest = {
+        ...newBook,
+        publishedYear: Number.isFinite(parsedPublishedYear) ? parsedPublishedYear : 0,
+        pageCount: Number.isFinite(parsedPageCount) ? parsedPageCount : 0,
+        price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
+      };
+
       const response = await fetch('/api/admin/books', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newBook),
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
@@ -272,6 +288,9 @@ export default function AdminPage() {
         isAvailable: true
       });
       setShowAddBookForm(false);
+      setNewBookPublishedYearInput(String(new Date().getFullYear()));
+      setNewBookPageCountInput('');
+      setNewBookPriceInput('');
       
     } catch (err) {
       setBooksError(err instanceof Error ? err.message : 'Неизвестная ошибка');
@@ -287,12 +306,15 @@ export default function AdminPage() {
     try {
       setUpdatingBook(true);
       setBooksError(null);
+      const parsedPublishedYear = parseInt(editingBookPublishedYearInput, 10);
+      const parsedPageCount = parseInt(editingBookPageCountInput, 10);
+      const parsedPrice = parseFloat((editingBookPriceInput || '').replace(',', '.'));
       const errs = validateBook({
         title: editingBook.title,
         author: editingBook.author,
-        publishedYear: editingBook.publishedYear,
-        pageCount: editingBook.pageCount,
-        price: editingBook.price,
+        publishedYear: Number.isFinite(parsedPublishedYear) ? parsedPublishedYear : NaN,
+        pageCount: Number.isFinite(parsedPageCount) ? parsedPageCount : NaN,
+        price: Number.isFinite(parsedPrice) ? parsedPrice : NaN,
       });
       setEditingBookErrors(errs);
       if (Object.keys(errs).length > 0) {
@@ -305,11 +327,11 @@ export default function AdminPage() {
         author: editingBook.author,
         description: editingBook.description,
         isbn: editingBook.isbn,
-        publishedYear: editingBook.publishedYear,
+        publishedYear: Number.isFinite(parsedPublishedYear) ? parsedPublishedYear : 0,
         genre: editingBook.genre,
         language: editingBook.language,
-        pageCount: editingBook.pageCount,
-        price: editingBook.price,
+        pageCount: Number.isFinite(parsedPageCount) ? parsedPageCount : 0,
+        price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
         coverImageUrl: editingBook.coverImageUrl,
         isAvailable: editingBook.isAvailable
       };
@@ -376,6 +398,9 @@ export default function AdminPage() {
 
   const handleEditBook = (book: Book) => {
     setEditingBook({ ...book });
+    setEditingBookPublishedYearInput(String(book.publishedYear));
+    setEditingBookPageCountInput(String(book.pageCount));
+    setEditingBookPriceInput(String(book.price ?? ''));
     setShowEditBookForm(true);
   };
 
@@ -402,11 +427,17 @@ export default function AdminPage() {
       coverImageUrl: '',
       isAvailable: true
     });
+    setNewBookPublishedYearInput(String(new Date().getFullYear()));
+    setNewBookPageCountInput('');
+    setNewBookPriceInput('');
   };
 
   const cancelEditBook = () => {
     setShowEditBookForm(false);
     setEditingBook(null);
+    setEditingBookPublishedYearInput('');
+    setEditingBookPageCountInput('');
+    setEditingBookPriceInput('');
   };
 
   const updateUserRole = async (userId: string, role: UserRole) => {
@@ -508,12 +539,19 @@ export default function AdminPage() {
         return;
       }
       
-      const response = await fetch('/api/register', {
+      // Бэкенд ожидает [FromForm] в AccountController.Register
+      const form = new FormData();
+      form.set('Email', newUser.email);
+      form.set('Password', newUser.password);
+      form.set('FirstName', newUser.firstName);
+      form.set('LastName', newUser.lastName);
+      form.set('PhoneNumber', newUser.phoneNumber);
+      form.set('CountryCode', newUser.countryCode);
+      form.set('Gender', newUser.gender);
+
+      const response = await fetch('/api/account/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newUser),
+        body: form,
       });
       
       if (!response.ok) {
@@ -616,6 +654,29 @@ export default function AdminPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/health', { cache: 'no-store' });
+                  const data = await res.json();
+                  if (res.ok) {
+                    showToast(`Бэкенд доступен: ${data.selectedBase}`, 'success');
+                  } else {
+                    showToast('Бэкенд недоступен, проверьте запуск API', 'error');
+                    console.log('Health details:', data);
+                  }
+                } catch (e) {
+                  showToast('Проверка соединения не удалась', 'error');
+                }
+              }}
+              className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2"
+              type="button"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v16h16M4 12h8m0 0l-3-3m3 3l-3 3" />
+              </svg>
+              Проверить бэкенд
+            </button>
             <button
               onClick={activeTab === 'users' ? fetchUsers : fetchBooks}
               disabled={loading || booksLoading}
@@ -1437,18 +1498,10 @@ export default function AdminPage() {
                   Год издания *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(newBook.publishedYear) ? newBook.publishedYear : 0}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setNewBook({
-                      ...newBook,
-                      publishedYear: v === '' ? 0 : parseInt(v)
-                    });
-                  }}
+                  type="text"
+                  value={newBookPublishedYearInput}
+                  onChange={(e) => setNewBookPublishedYearInput(e.target.value)}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                  min="1000"
-                  max={new Date().getFullYear() + 1}
                   required
                 />
               </div>
@@ -1458,35 +1511,22 @@ export default function AdminPage() {
                   Количество страниц *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(newBook.pageCount) ? newBook.pageCount : 0}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setNewBook({
-                      ...newBook,
-                      pageCount: v === '' ? 0 : parseInt(v)
-                    });
-                  }}
+                  type="text"
+                  value={newBookPageCountInput}
+                  onChange={(e) => setNewBookPageCountInput(e.target.value)}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                  min="1"
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
-                  Цена (₽) *
+                  Цена (€) *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(newBook.price) ? newBook.price : 0}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setNewBook({
-                      ...newBook,
-                      price: v === '' ? 0 : parseFloat(v)
-                    });
-                  }}
+                  type="text"
+                  value={newBookPriceInput}
+                  onChange={(e) => setNewBookPriceInput(e.target.value.replace(/[^0-9.,]/g, ''))}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="0"
                   step="0.01"
@@ -1649,12 +1689,10 @@ export default function AdminPage() {
                   Год издания *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(editingBook.publishedYear) ? editingBook.publishedYear : 0}
-                  onChange={(e) => setEditingBook({...editingBook, publishedYear: e.target.value === '' ? 0 : parseInt(e.target.value)})}
+                  type="text"
+                  value={editingBookPublishedYearInput}
+                  onChange={(e) => setEditingBookPublishedYearInput(e.target.value)}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                  min="1000"
-                  max={new Date().getFullYear() + 1}
                   required
                 />
               </div>
@@ -1664,23 +1702,22 @@ export default function AdminPage() {
                   Количество страниц *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(editingBook.pageCount) ? editingBook.pageCount : 0}
-                  onChange={(e) => setEditingBook({...editingBook, pageCount: e.target.value === '' ? 0 : parseInt(e.target.value)})}
+                  type="text"
+                  value={editingBookPageCountInput}
+                  onChange={(e) => setEditingBookPageCountInput(e.target.value)}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                  min="1"
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Цена (₽) *
+                  Цена (€) *
                 </label>
                 <input
-                  type="number"
-                  value={Number.isFinite(editingBook.price) ? editingBook.price : 0}
-                  onChange={(e) => setEditingBook({...editingBook, price: e.target.value === '' ? 0 : parseFloat(e.target.value)})}
+                  type="text"
+                  value={editingBookPriceInput}
+                  onChange={(e) => setEditingBookPriceInput(e.target.value.replace(/[^0-9.,]/g, ''))}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="0"
                   step="0.01"

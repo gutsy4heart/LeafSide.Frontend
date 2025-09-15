@@ -18,7 +18,8 @@ export async function DELETE(
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';
-    const response = await fetch(`${backendUrl}/api/Account/users/${userId}`, {
+    // Бэк реализует удаление пользователя в AdminUsersController
+    const response = await fetch(`${backendUrl}/api/AdminUsers/users/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

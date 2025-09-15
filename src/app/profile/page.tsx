@@ -337,12 +337,12 @@ export default function ProfilePage() {
                     <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Уведомления</h3>
                     <div className="space-y-3">
                       <label className="flex items-center gap-3">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" defaultChecked />
-                        <span className="text-[var(--foreground)]">Email уведомления</span>
+                        <input disabled type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" />
+                        <span className="text-[var(--foreground)]">Email уведомления (в разработке)</span>
                       </label>
                       <label className="flex items-center gap-3">
-                        <input type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" />
-                        <span className="text-[var(--foreground)]">SMS уведомления</span>
+                        <input disabled type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" />
+                        <span className="text-[var(--foreground)]">SMS уведомления (в разработке)</span>
                       </label>
                     </div>
                   </div>
@@ -354,8 +354,8 @@ export default function ProfilePage() {
                         <div className="font-medium text-[var(--foreground)]">Изменить пароль</div>
                         <div className="text-sm text-[var(--muted)]">Обновите пароль для безопасности</div>
                       </button>
-                      <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors">
-                        <div className="font-medium text-[var(--foreground)]">Двухфакторная аутентификация</div>
+                      <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors" disabled>
+                        <div className="font-medium text-[var(--foreground)]">Двухфакторная аутентификация (в разработке)</div>
                         <div className="text-sm text-[var(--muted)]">Дополнительная защита аккаунта</div>
                       </button>
                     </div>
