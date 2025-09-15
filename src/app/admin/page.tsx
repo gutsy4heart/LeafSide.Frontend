@@ -70,6 +70,42 @@ export default function AdminPage() {
   const [bookGenreFilter, setBookGenreFilter] = useState('all');
   const [bookAvailabilityFilter, setBookAvailabilityFilter] = useState('all');
 
+  // Toast notifications
+  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, type, message }]);
+    // auto dismiss
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
+
+  // Simple field validation states
+  const [newBookErrors, setNewBookErrors] = useState<Record<string, string>>({});
+  const [editingBookErrors, setEditingBookErrors] = useState<Record<string, string>>({});
+  const [newUserErrors, setNewUserErrors] = useState<Record<string, string>>({});
+
+  const validateBook = (b: { title?: string; author?: string; publishedYear?: number; pageCount?: number; price?: number; }) => {
+    const errors: Record<string, string> = {};
+    if (!b.title || b.title.trim().length === 0) errors.title = 'Название обязательно';
+    if (!b.author || b.author.trim().length === 0) errors.author = 'Автор обязателен';
+    const year = b.publishedYear ?? 0;
+    if (!Number.isFinite(year) || year < 1000 || year > new Date().getFullYear() + 1) errors.publishedYear = 'Некорректный год';
+    const pages = b.pageCount ?? 0;
+    if (!Number.isFinite(pages) || pages < 1) errors.pageCount = 'Минимум 1 страница';
+    const price = b.price ?? 0;
+    if (!Number.isFinite(price) || price < 0) errors.price = 'Цена не может быть отрицательной';
+    return errors;
+  };
+
+  const validateNewUser = (u: { email: string; password: string; firstName: string; lastName: string; }) => {
+    const errors: Record<string, string> = {};
+    if (!u.email || !u.email.includes('@')) errors.email = 'Укажите корректный email';
+    if (!u.password || u.password.length < 6) errors.password = 'Минимум 6 символов';
+    if (!u.firstName) errors.firstName = 'Имя обязательно';
+    if (!u.lastName) errors.lastName = 'Фамилия обязательна';
+    return errors;
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
@@ -81,7 +117,7 @@ export default function AdminPage() {
       return;
     }
     
-    // Ждем, пока токен будет доступен
+    // Ждем пока токен будет доступен
     if (token) {
       fetchUsers();
       fetchBooks();
@@ -190,6 +226,18 @@ export default function AdminPage() {
     try {
       setCreatingBook(true);
       setBooksError(null);
+      const errs = validateBook({
+        title: newBook.title,
+        author: newBook.author,
+        publishedYear: newBook.publishedYear,
+        pageCount: newBook.pageCount,
+        price: newBook.price,
+      });
+      setNewBookErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        showToast('Проверьте корректность полей книги', 'error');
+        return;
+      }
       
       const response = await fetch('/api/admin/books', {
         method: 'POST',
@@ -207,6 +255,7 @@ export default function AdminPage() {
       
       // Обновляем список книг
       await fetchBooks();
+      showToast(`Книга "${newBook.title}" создана`, 'success');
       
       // Сбрасываем форму
       setNewBook({
@@ -226,6 +275,7 @@ export default function AdminPage() {
       
     } catch (err) {
       setBooksError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      showToast('Ошибка при создании книги', 'error');
     } finally {
       setCreatingBook(false);
     }
@@ -237,6 +287,18 @@ export default function AdminPage() {
     try {
       setUpdatingBook(true);
       setBooksError(null);
+      const errs = validateBook({
+        title: editingBook.title,
+        author: editingBook.author,
+        publishedYear: editingBook.publishedYear,
+        pageCount: editingBook.pageCount,
+        price: editingBook.price,
+      });
+      setEditingBookErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        showToast('Проверьте корректность полей книги', 'error');
+        return;
+      }
       
       const updateData: UpdateBookRequest = {
         title: editingBook.title,
@@ -268,6 +330,7 @@ export default function AdminPage() {
       
       // Обновляем список книг
       await fetchBooks();
+      showToast(`Книга "${editingBook.title}" обновлена`, 'success');
       
       // Закрываем форму редактирования
       setShowEditBookForm(false);
@@ -275,6 +338,7 @@ export default function AdminPage() {
       
     } catch (err) {
       setBooksError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      showToast('Ошибка при обновлении книги', 'error');
     } finally {
       setUpdatingBook(false);
     }
@@ -301,8 +365,10 @@ export default function AdminPage() {
       // Удаляем книгу из локального состояния
       setBooks(books.filter(book => book.id !== bookDeleteDialog.book!.id));
       setBookDeleteDialog({ isOpen: false, book: null });
+      showToast(`Книга "${bookDeleteDialog.book.title}" удалена`, 'success');
     } catch (err) {
       setBooksError(err instanceof Error ? err.message : "Unknown error");
+      showToast('Ошибка при удалении книги', 'error');
     } finally {
       setDeletingBook(false);
     }
@@ -418,8 +484,10 @@ export default function AdminPage() {
       // Удаляем пользователя из локального состояния
       setUsers(users.filter(user => user.id !== deleteDialog.user!.id));
       setDeleteDialog({ isOpen: false, user: null });
+      showToast(`Пользователь ${deleteDialog.user.email} удален`, 'success');
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+      showToast('Ошибка при удалении пользователя', 'error');
     } finally {
       setDeleting(false);
     }
@@ -433,6 +501,12 @@ export default function AdminPage() {
     try {
       setCreating(true);
       setError(null);
+      const errs = validateNewUser(newUser as any);
+      setNewUserErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        showToast('Проверьте корректность полей пользователя', 'error');
+        return;
+      }
       
       const response = await fetch('/api/register', {
         method: 'POST',
@@ -449,6 +523,7 @@ export default function AdminPage() {
       
       // Обновляем список пользователей
       await fetchUsers();
+      showToast(`Пользователь ${newUser.email} создан`, 'success');
       
       // Сбрасываем форму
       setNewUser({
@@ -464,6 +539,7 @@ export default function AdminPage() {
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      showToast('Ошибка при создании пользователя', 'error');
     } finally {
       setCreating(false);
     }
@@ -522,6 +598,14 @@ export default function AdminPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
+        {/* Toasts */}
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {toasts.map(t => (
+            <div key={t.id} className={`px-4 py-3 rounded shadow text-white ${t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`}>
+              {t.message}
+            </div>
+          ))}
+        </div>
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">
@@ -1126,6 +1210,7 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                {newUserErrors.email && <p className="text-sm text-red-600 mt-1">{newUserErrors.email}</p>}
               </div>
               
               <div>
@@ -1139,6 +1224,7 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                {newUserErrors.password && <p className="text-sm text-red-600 mt-1">{newUserErrors.password}</p>}
               </div>
               
               <div>
@@ -1152,6 +1238,7 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                {newUserErrors.firstName && <p className="text-sm text-red-600 mt-1">{newUserErrors.firstName}</p>}
               </div>
               
               <div>
@@ -1165,6 +1252,7 @@ export default function AdminPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
+                {newUserErrors.lastName && <p className="text-sm text-red-600 mt-1">{newUserErrors.lastName}</p>}
               </div>
               
               <div>
