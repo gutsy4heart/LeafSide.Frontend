@@ -12,6 +12,7 @@ type UserInfo = {
   gender?: string;
   roles?: string[];
   createdAt?: string;
+  exp?: number;
 };
 
 type AuthContextType = {
@@ -33,12 +34,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const clearAuth = () => {
+    setTokenState(null);
+    setUserInfo(null);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  };
+
   // Функция для загрузки профиля пользователя с бэкенда
   const fetchUserProfile = async (token: string): Promise<UserInfo | null> => {
     try {
-      console.log('Auth Context: Начинаем загрузку профиля с токеном:', token.substring(0, 20) + '...');
       setIsLoading(true);
-      
       const response = await fetch('/api/auth/profile', {
         method: 'GET',
         headers: {
@@ -47,17 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
-      console.log('Auth Context: Получен ответ от API:', response.status);
+      if (response.status === 401 || response.status === 403) {
+        clearAuth();
+        return null;
+      }
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Auth Context: Ошибка при загрузке профиля:', response.status, errorText);
         return null;
       }
 
       const profile = await response.json();
-      console.log('Auth Context: Успешно получен профиль:', profile);
-      
       return {
         id: profile.id,
         email: profile.email,
@@ -70,11 +74,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         roles: profile.roles || [],
         createdAt: profile.createdAt
       };
-    } catch (error) {
-      console.error("Auth Context: Ошибка при загрузке профиля:", error);
+    } catch {
       return null;
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Проверка истечения срока действия токена (exp)
+  const isTokenExpired = (t: string): boolean => {
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      if (!payload?.exp) return false;
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      return payload.exp <= nowSeconds;
+    } catch {
+      return false;
     }
   };
 
@@ -82,14 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const decodeToken = (token: string): UserInfo | null => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('Auth Context: Decoded token payload:', payload);
-      
       const roles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
       const userId = payload.sub || payload.id;
-      
-      console.log('Auth Context: User ID from token:', userId);
-      console.log('Auth Context: Roles from token:', roles);
-      
       return {
         email: payload.email || payload.sub || "Пользователь",
         name: payload.name || payload.given_name || "Пользователь",
@@ -100,10 +109,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         countryCode: payload.countryCode,
         gender: payload.gender,
         roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
-        createdAt: payload.createdAt
+        createdAt: payload.createdAt,
+        exp: payload.exp,
       };
-    } catch (error) {
-      console.error("Auth Context: Ошибка при декодировании токена:", error);
+    } catch {
       return null;
     }
   };
@@ -113,20 +122,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const t = localStorage.getItem(STORAGE_KEY);
         if (t) {
+          if (isTokenExpired(t)) { clearAuth(); return; }
           setTokenState(t);
-          // Сначала загружаем профиль с бэкенда
           const userProfile = await fetchUserProfile(t);
           if (userProfile) {
             setUserInfo(userProfile);
           } else {
-            // Если не удалось загрузить с бэкенда, используем данные из токена
             const user = decodeToken(t);
             setUserInfo(user);
           }
         }
-      } catch (error) {
-        console.error("Ошибка при инициализации токена:", error);
-      }
+      } catch {}
     };
 
     initializeAuth();
@@ -135,12 +141,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setToken = async (t: string | null) => {
     setTokenState(t);
     if (t) {
-      // Загружаем профиль с бэкенда
+      if (isTokenExpired(t)) { clearAuth(); return; }
       const userProfile = await fetchUserProfile(t);
       if (userProfile) {
         setUserInfo(userProfile);
       } else {
-        // Если не удалось загрузить с бэкенда, используем данные из токена
         const user = decodeToken(t);
         setUserInfo(user);
       }
@@ -148,16 +153,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(STORAGE_KEY, t);
       } catch {}
     } else {
-      setUserInfo(null);
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch {}
+      clearAuth();
     }
   };
 
   const logout = () => {
-    setToken(null);
-    setUserInfo(null);
+    clearAuth();
   };
 
   const isAdmin = useMemo(() => {

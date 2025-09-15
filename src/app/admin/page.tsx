@@ -601,7 +601,7 @@ export default function AdminPage() {
         {/* Toasts */}
         <div className="fixed top-4 right-4 z-50 space-y-2">
           {toasts.map(t => (
-            <div key={t.id} className={`px-4 py-3 rounded shadow text-white ${t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-blue-600'}`}>
+            <div key={t.id} className={`px-4 py-3 rounded shadow text-white ${t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-[var(--accent)]'}`}>
               {t.message}
             </div>
           ))}
@@ -619,7 +619,7 @@ export default function AdminPage() {
             <button
               onClick={activeTab === 'users' ? fetchUsers : fetchBooks}
               disabled={loading || booksLoading}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -629,7 +629,7 @@ export default function AdminPage() {
             {activeTab === 'users' ? (
               <button
                 onClick={() => setShowAddUserForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -639,7 +639,7 @@ export default function AdminPage() {
             ) : (
               <button
                 onClick={() => setShowAddBookForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -659,8 +659,8 @@ export default function AdminPage() {
               onClick={() => setActiveTab('users')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'users'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--card)]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -674,8 +674,8 @@ export default function AdminPage() {
               onClick={() => setActiveTab('books')}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'books'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--card)]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -707,7 +707,7 @@ export default function AdminPage() {
       {/* Статистика */}
       {activeTab === 'users' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Всего пользователей</p>
@@ -721,7 +721,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Обычные пользователи</p>
@@ -735,7 +735,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Администраторы</p>
@@ -749,7 +749,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Новые за неделю</p>
@@ -765,7 +765,7 @@ export default function AdminPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Всего книг</p>
@@ -779,7 +779,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100 text-sm font-medium">Доступные книги</p>
@@ -793,7 +793,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium">Недоступные книги</p>
@@ -807,7 +807,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg p-6 text-white">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100 text-sm font-medium">Средняя цена</p>
@@ -963,24 +963,24 @@ export default function AdminPage() {
       <div className="card p-6">
         <div className="overflow-x-auto">
           {activeTab === 'users' ? (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-white/10">
+              <thead className="bg-[var(--card)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Пользователь
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Текущая роль
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Действия
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[var(--card)] divide-y divide-white/10">
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
@@ -1007,23 +1007,23 @@ export default function AdminPage() {
                           {user.email.charAt(0).toUpperCase()}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-[var(--foreground)]">
                             {user.userName}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-[var(--muted)]">
                             ID: {user.id.substring(0, 8)}...
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         user.roles.includes("Admin") 
-                          ? "bg-red-100 text-red-800" 
-                          : "bg-green-100 text-green-800"
+                          ? "bg-[var(--accent)]/10 text-[var(--accent)]" 
+                          : "bg-[var(--accent)]/10 text-[var(--accent)]"
                       }`}>
                         {user.roles.includes("Admin") ? "Администратор" : "Пользователь"}
                       </span>
@@ -1034,7 +1034,7 @@ export default function AdminPage() {
                           <button
                             onClick={() => updateUserRole(user.id, UserRole.User)}
                             disabled={updatingRole === user.id}
-                            className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                            className="text-[var(--accent)] hover:text-[var(--accent)]/90 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 px-3 py-1 rounded-md transition-colors disabled:opacity-50 flex items-center"
                           >
                             {updatingRole === user.id && (
                               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24">
@@ -1048,7 +1048,7 @@ export default function AdminPage() {
                           <button
                             onClick={() => updateUserRole(user.id, UserRole.Admin)}
                             disabled={updatingRole === user.id}
-                            className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                            className="text-[var(--accent)] hover:text-[var(--accent)]/90 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 px-3 py-1 rounded-md transition-colors disabled:opacity-50 flex items-center"
                           >
                             {updatingRole === user.id && (
                               <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24">
@@ -1074,30 +1074,30 @@ export default function AdminPage() {
               </tbody>
             </table>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-white/10">
+              <thead className="bg-[var(--card)]">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Книга
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Автор
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Жанр
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Цена
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Статус
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
                     Действия
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-[var(--card)] divide-y divide-white/10">
                 {filteredBooks.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
@@ -1137,20 +1137,20 @@ export default function AdminPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
                       {book.author}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
                       {book.genre}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
                       € {book.price}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         book.isAvailable 
-                          ? "bg-green-100 text-green-800" 
-                          : "bg-red-100 text-red-800"
+                          ? "bg-[var(--accent)]/10 text-[var(--accent)]" 
+                          : "bg-[var(--accent)]/10 text-[var(--accent)]"
                       }`}>
                         {book.isAvailable ? "Доступна" : "Недоступна"}
                       </span>
@@ -1159,13 +1159,13 @@ export default function AdminPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEditBook(book)}
-                          className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors"
+                          className="text-[var(--accent)] hover:text-[var(--accent)]/90 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 px-3 py-1 rounded-md transition-colors"
                         >
                           Редактировать
                         </button>
                         <button
                           onClick={() => handleDeleteBook(book)}
-                          className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors"
+                          className="text-[var(--accent)] hover:text-[var(--accent)]/90 bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 px-3 py-1 rounded-md transition-colors"
                         >
                           Удалить
                         </button>
@@ -1308,7 +1308,7 @@ export default function AdminPage() {
               <button
                 onClick={handleCreateUser}
                 disabled={creating || !newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-md transition-colors disabled:opacity-50 flex items-center"
               >
                 {creating && (
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -1360,7 +1360,7 @@ export default function AdminPage() {
               <button
                 onClick={confirmDeleteUser}
                 disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-md transition-colors disabled:opacity-50 flex items-center"
               >
                 {deleting && (
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -1378,14 +1378,14 @@ export default function AdminPage() {
       {/* Форма добавления книги */}
       {showAddBookForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--card)] border border-white/10 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-semibold text-[var(--foreground)]">
                 Добавить новую книгу
               </h3>
               <button
                 onClick={cancelCreateBook}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-[var(--muted)] hover:text-[var(--foreground)]"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1395,45 +1395,45 @@ export default function AdminPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Название *
                 </label>
                 <input
                   type="text"
                   value={newBook.title}
                   onChange={(e) => setNewBook({...newBook, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Автор *
                 </label>
                 <input
                   type="text"
                   value={newBook.author}
                   onChange={(e) => setNewBook({...newBook, author: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   ISBN
                 </label>
                 <input
                   type="text"
                   value={newBook.isbn}
                   onChange={(e) => setNewBook({...newBook, isbn: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder:[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Год издания *
                 </label>
                 <input
@@ -1446,7 +1446,7 @@ export default function AdminPage() {
                       publishedYear: v === '' ? 0 : parseInt(v)
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="1000"
                   max={new Date().getFullYear() + 1}
                   required
@@ -1454,7 +1454,7 @@ export default function AdminPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Количество страниц *
                 </label>
                 <input
@@ -1467,14 +1467,14 @@ export default function AdminPage() {
                       pageCount: v === '' ? 0 : parseInt(v)
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="1"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Цена (₽) *
                 </label>
                 <input
@@ -1487,7 +1487,7 @@ export default function AdminPage() {
                       price: v === '' ? 0 : parseFloat(v)
                     });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="0"
                   step="0.01"
                   required
@@ -1495,13 +1495,13 @@ export default function AdminPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Жанр
                 </label>
                 <select
                   value={newBook.genre}
                   onChange={(e) => setNewBook({...newBook, genre: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 >
                   {BOOK_GENRES.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
@@ -1510,13 +1510,13 @@ export default function AdminPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Язык
                 </label>
                 <select
                   value={newBook.language}
                   onChange={(e) => setNewBook({...newBook, language: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 >
                   {BOOK_LANGUAGES.map(lang => (
                     <option key={lang} value={lang}>{lang}</option>
@@ -1525,26 +1525,26 @@ export default function AdminPage() {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   Описание
                 </label>
                 <textarea
                   value={newBook.description}
                   onChange={(e) => setNewBook({...newBook, description: e.target.value})}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">
                   URL обложки
                 </label>
                 <input
                   type="url"
                   value={newBook.coverImageUrl}
                   onChange={(e) => setNewBook({...newBook, coverImageUrl: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
@@ -1554,9 +1554,9 @@ export default function AdminPage() {
                     type="checkbox"
                     checked={newBook.isAvailable}
                     onChange={(e) => setNewBook({...newBook, isAvailable: e.target.checked})}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    className="rounded border-white/20 text-[var(--accent)] bg-[var(--card)] shadow-sm focus:border-transparent focus:ring focus:ring-[var(--accent)]/40 focus:ring-opacity-50"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Книга доступна</span>
+                  <span className="ml-2 text-sm text-[var(--muted)]">Книга доступна</span>
                 </label>
               </div>
             </div>
@@ -1572,7 +1572,7 @@ export default function AdminPage() {
               <button
                 onClick={createBook}
                 disabled={creatingBook || !newBook.title || !newBook.author}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-md transition-colors disabled:opacity-50 flex items-center"
               >
                 {creatingBook && (
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -1592,12 +1592,12 @@ export default function AdminPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-semibold text-[var(--foreground)]">
                 Редактировать книгу
               </h3>
               <button
                 onClick={cancelEditBook}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-[var(--muted)] hover:text-[var(--foreground)]"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1607,40 +1607,40 @@ export default function AdminPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-1">
                   Название *
                 </label>
                 <input
                   type="text"
                   value={editingBook.title}
                   onChange={(e) => setEditingBook({...editingBook, title: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-1">
                   Автор *
                 </label>
                 <input
                   type="text"
                   value={editingBook.author}
                   onChange={(e) => setEditingBook({...editingBook, author: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--muted)] mb-1">
                   ISBN
                 </label>
                 <input
                   type="text"
                   value={editingBook.isbn}
                   onChange={(e) => setEditingBook({...editingBook, isbn: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
@@ -1652,7 +1652,7 @@ export default function AdminPage() {
                   type="number"
                   value={Number.isFinite(editingBook.publishedYear) ? editingBook.publishedYear : 0}
                   onChange={(e) => setEditingBook({...editingBook, publishedYear: e.target.value === '' ? 0 : parseInt(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="1000"
                   max={new Date().getFullYear() + 1}
                   required
@@ -1667,7 +1667,7 @@ export default function AdminPage() {
                   type="number"
                   value={Number.isFinite(editingBook.pageCount) ? editingBook.pageCount : 0}
                   onChange={(e) => setEditingBook({...editingBook, pageCount: e.target.value === '' ? 0 : parseInt(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="1"
                   required
                 />
@@ -1681,7 +1681,7 @@ export default function AdminPage() {
                   type="number"
                   value={Number.isFinite(editingBook.price) ? editingBook.price : 0}
                   onChange={(e) => setEditingBook({...editingBook, price: e.target.value === '' ? 0 : parseFloat(e.target.value)})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   min="0"
                   step="0.01"
                   required
@@ -1695,7 +1695,7 @@ export default function AdminPage() {
                 <select
                   value={editingBook.genre}
                   onChange={(e) => setEditingBook({...editingBook, genre: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 >
                   {BOOK_GENRES.map(genre => (
                     <option key={genre} value={genre}>{genre}</option>
@@ -1710,7 +1710,7 @@ export default function AdminPage() {
                 <select
                   value={editingBook.language}
                   onChange={(e) => setEditingBook({...editingBook, language: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 >
                   {BOOK_LANGUAGES.map(lang => (
                     <option key={lang} value={lang}>{lang}</option>
@@ -1726,7 +1726,7 @@ export default function AdminPage() {
                   value={editingBook.description}
                   onChange={(e) => setEditingBook({...editingBook, description: e.target.value})}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
@@ -1738,7 +1738,7 @@ export default function AdminPage() {
                   type="url"
                   value={editingBook.coverImageUrl || ''}
                   onChange={(e) => setEditingBook({...editingBook, coverImageUrl: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
               
@@ -1748,9 +1748,9 @@ export default function AdminPage() {
                     type="checkbox"
                     checked={editingBook.isAvailable}
                     onChange={(e) => setEditingBook({...editingBook, isAvailable: e.target.checked})}
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    className="rounded border-white/20 text-[var(--accent)] bg-[var(--card)] shadow-sm focus:border-transparent focus:ring focus:ring-[var(--accent)]/40 focus:ring-opacity-50"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Книга доступна</span>
+                  <span className="ml-2 text-sm text-[var(--muted)]">Книга доступна</span>
                 </label>
               </div>
             </div>
@@ -1759,14 +1759,14 @@ export default function AdminPage() {
               <button
                 onClick={cancelEditBook}
                 disabled={updatingBook}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium text-[var(--foreground)] bg-[var(--card)] border border-white/10 hover:bg-[var(--card)]/80 rounded-md transition-colors disabled:opacity-50"
               >
                 Отмена
               </button>
               <button
                 onClick={updateBook}
                 disabled={updatingBook || !editingBook.title || !editingBook.author}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-md transition-colors disabled:opacity-50 flex items-center"
               >
                 {updatingBook && (
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -1818,7 +1818,7 @@ export default function AdminPage() {
               <button
                 onClick={deleteBook}
                 disabled={deletingBook}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors disabled:opacity-50 flex items-center"
+                className="px-4 py-2 text-sm font-medium text-white bg-[var(--accent)] hover:bg-[var(--accent)]/80 rounded-md transition-colors disabled:opacity-50 flex items-center"
               >
                 {deletingBook && (
                   <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
