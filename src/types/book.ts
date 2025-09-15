@@ -9,7 +9,7 @@ export interface Book {
   language: string;
   pageCount: number;
   price: number;
-  coverImageUrl?: string;
+  imageUrl?: string;
   isAvailable: boolean;
   createdAt: string;
   updatedAt: string;
@@ -25,7 +25,7 @@ export interface CreateBookRequest {
   language: string;
   pageCount: number;
   price: number;
-  coverImageUrl?: string;
+  imageUrl?: string;
   isAvailable: boolean;
 }
 
@@ -39,7 +39,7 @@ export interface UpdateBookRequest {
   language?: string;
   pageCount?: number;
   price?: number;
-  coverImageUrl?: string;
+  imageUrl?: string;
   isAvailable?: boolean;
 }
 
@@ -54,7 +54,7 @@ export interface BookResponse {
   language: string;
   pageCount: number;
   price: number;
-  coverImageUrl?: string;
+  imageUrl?: string;
   isAvailable: boolean;
   createdAt: string;
   updatedAt: string;

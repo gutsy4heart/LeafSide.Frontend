@@ -63,7 +63,7 @@ export default function AdminPage() {
     language: 'Russian',
     pageCount: 0,
     price: 0,
-    coverImageUrl: '',
+    imageUrl: '',
     isAvailable: true
   });
   const [newBookPublishedYearInput, setNewBookPublishedYearInput] = useState<string>(String(newBook.publishedYear));
@@ -284,7 +284,7 @@ export default function AdminPage() {
         language: 'Russian',
         pageCount: 0,
         price: 0,
-        coverImageUrl: '',
+        imageUrl: '',
         isAvailable: true
       });
       setShowAddBookForm(false);
@@ -332,7 +332,7 @@ export default function AdminPage() {
         language: editingBook.language,
         pageCount: Number.isFinite(parsedPageCount) ? parsedPageCount : 0,
         price: Number.isFinite(parsedPrice) ? parsedPrice : 0,
-        coverImageUrl: editingBook.coverImageUrl,
+        imageUrl: editingBook.imageUrl,
         isAvailable: editingBook.isAvailable
       };
       
@@ -424,7 +424,7 @@ export default function AdminPage() {
       language: 'Russian',
       pageCount: 0,
       price: 0,
-      coverImageUrl: '',
+        imageUrl: '',
       isAvailable: true
     });
     setNewBookPublishedYearInput(String(new Date().getFullYear()));
@@ -1182,8 +1182,8 @@ export default function AdminPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-12 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center text-white text-xs font-medium mr-4">
-                          {book.coverImageUrl ? (
-                            <img src={book.coverImageUrl} alt={book.title} className="w-full h-full object-cover rounded" />
+                          {book.imageUrl ? (
+                            <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover rounded" />
                           ) : (
                             <span>{book.title.charAt(0).toUpperCase()}</span>
                           )}
@@ -1582,8 +1582,8 @@ export default function AdminPage() {
                 </label>
                 <input
                   type="url"
-                  value={newBook.coverImageUrl}
-                  onChange={(e) => setNewBook({...newBook, coverImageUrl: e.target.value})}
+                  value={newBook.imageUrl}
+                  onChange={(e) => setNewBook({...newBook, imageUrl: e.target.value})}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
@@ -1773,8 +1773,8 @@ export default function AdminPage() {
                 </label>
                 <input
                   type="url"
-                  value={editingBook.coverImageUrl || ''}
-                  onChange={(e) => setEditingBook({...editingBook, coverImageUrl: e.target.value})}
+                  value={editingBook.imageUrl || ''}
+                  onChange={(e) => setEditingBook({...editingBook, imageUrl: e.target.value})}
                   className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
