@@ -4,16 +4,17 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5233';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
       return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${params.orderId}`, {
+    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${orderId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -36,9 +37,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
@@ -47,7 +49,7 @@ export async function PUT(
 
     const body = await request.json();
 
-    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${params.orderId}/status`, {
+    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${orderId}/status`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -71,16 +73,17 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params;
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
     if (!token) {
       return NextResponse.json({ error: 'No token provided' }, { status: 401 });
     }
 
-    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${params.orderId}`, {
+    const response = await fetch(`${BACKEND_URL}/api/admin/orders/${orderId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,

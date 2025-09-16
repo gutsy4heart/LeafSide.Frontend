@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		const body = await request.json();
-
+		
 		const res = await fetch(`${BASE_URL}/api/Cart/items`, {
 			method: "POST",
 			headers: {
@@ -23,15 +23,36 @@ export async function POST(request: NextRequest) {
 			body: JSON.stringify(body),
 		});
 
+
 		if (!res.ok) {
-			const text = await res.text();
-			return NextResponse.json({ error: text || "Upstream error" }, { status: res.status });
+			let errorMessage = "Upstream error";
+			try {
+				const text = await res.text();
+				console.error('Cart API - Error response text:', text);
+				
+				// Пытаемся распарсить как JSON
+				try {
+					const errorJson = JSON.parse(text);
+					errorMessage = errorJson.error || errorJson.message || text || errorMessage;
+					console.error('Cart API - Parsed error JSON:', errorJson);
+				} catch (jsonError) {
+					// Если не JSON, используем текст как есть
+					errorMessage = text || errorMessage;
+					console.error('Cart API - Error is not JSON, using text:', errorMessage);
+				}
+			} catch (textError) {
+				console.error('Cart API - Failed to get error text:', textError);
+				errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+			}
+			
+			return NextResponse.json({ error: errorMessage }, { status: res.status });
 		}
 
 		const data = await res.json();
 		return NextResponse.json(data);
 	} catch (err: unknown) {
 		const message = err instanceof Error ? err.message : "Fetch failed";
+		console.error('Cart API - Exception:', message);
 		return NextResponse.json({ error: message }, { status: 502 });
 	}
 }

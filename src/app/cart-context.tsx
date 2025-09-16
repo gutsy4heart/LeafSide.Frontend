@@ -34,7 +34,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Загружаем корзину с сервера
   const loadCart = async () => {
+    console.log('Cart Context - loadCart called, token exists:', !!token, 'isAuthenticated:', isAuthenticated);
+    
     if (!token || !isAuthenticated) {
+      console.log('Cart Context - No token or not authenticated, clearing cart');
       setState({ items: [] });
       return;
     }
@@ -43,6 +46,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
       
+      console.log('Cart Context - Loading cart from server...');
       const response = await fetch('/api/cart', {
         method: 'GET',
         headers: {
@@ -51,21 +55,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         },
       });
 
+      console.log('Cart Context - Load response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
-        setState({
-          id: data.Id,
-          items: data.Items?.map((item: any) => ({
-            bookId: item.BookId,
-            quantity: item.Quantity,
-            priceSnapshot: item.PriceSnapshot
+        console.log('Cart Context - Load response data:', data);
+        console.log('Cart Context - data.items type:', typeof data.items);
+        console.log('Cart Context - data.items is array:', Array.isArray(data.items));
+        console.log('Cart Context - data.items length:', data.items?.length);
+        console.log('Cart Context - data.items content:', data.items);
+        
+        const newState = {
+          id: data.id,
+          items: data.items?.map((item: any) => ({
+            bookId: item.bookId,
+            quantity: item.quantity,
+            priceSnapshot: item.priceSnapshot
           })) || []
-        });
+        };
+        
+        console.log('Cart Context - Load new state:', newState);
+        console.log('Cart Context - Mapped items:', newState.items);
+        setState(newState);
       } else if (response.status === 401) {
         // Пользователь не авторизован
+        console.log('Cart Context - 401 response, clearing cart');
         setState({ items: [] });
       } else {
         const errorData = await response.json();
+        console.error('Cart Context - Load error:', errorData);
         setError(errorData.error || 'Ошибка загрузки корзины');
       }
     } catch (err) {
@@ -91,6 +109,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       setError(null);
 
+      // Проверяем, что bookId является валидным GUID
+      const guidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!guidRegex.test(bookId)) {
+        setError('Неверный формат ID книги');
+        return;
+      }
+
       const response = await fetch('/api/cart/items', {
         method: 'POST',
         headers: {
@@ -105,17 +130,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setState({
-          id: data.Id,
-          items: data.Items?.map((item: any) => ({
-            bookId: item.BookId,
-            quantity: item.Quantity,
-            priceSnapshot: item.PriceSnapshot
+        
+        const newState = {
+          id: data.id,
+          items: data.items?.map((item: any) => ({
+            bookId: item.bookId,
+            quantity: item.quantity,
+            priceSnapshot: item.priceSnapshot
           })) || []
-        });
+        };
+        
+        setState(newState);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Ошибка добавления в корзину');
+        console.error('Cart Context - Response not OK:', response.status, response.statusText);
+        
+        let errorMessage = 'Ошибка добавления в корзину';
+        try {
+          const errorData = await response.json();
+          console.error('Cart Context - Error data:', errorData);
+          errorMessage = errorData.error || errorMessage;
+        } catch (jsonError) {
+          console.error('Cart Context - Failed to parse error JSON:', jsonError);
+          // Если не удается распарсить JSON, используем текст ответа
+          try {
+            const errorText = await response.text();
+            console.error('Cart Context - Error text:', errorText);
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            console.error('Cart Context - Failed to get error text:', textError);
+          }
+        }
+        
+        setError(errorMessage);
       }
     } catch (err) {
       setError('Ошибка соединения с сервером');
@@ -193,7 +239,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const count = useMemo(() => state.items.reduce((n, i) => n + i.quantity, 0), [state.items]);
+  const count = useMemo(() => {
+    const total = state.items.reduce((n, i) => n + i.quantity, 0);
+    console.log('Cart Context - Count calculated:', total, 'from items:', state.items);
+    return total;
+  }, [state.items]);
+
+  // Логируем изменения состояния корзины
+  useEffect(() => {
+    console.log('Cart Context - State changed:', state);
+    console.log('Cart Context - Items in state:', state.items);
+    console.log('Cart Context - Count in state:', count);
+  }, [state, count]);
 
   const value: CartContextType = { 
     state, 

@@ -6,14 +6,19 @@ import { useState } from "react";
 interface AddToCartButtonProps {
   bookId: string;
   bookTitle: string;
+  isAvailable: boolean;
 }
 
-export default function AddToCartButton({ bookId, bookTitle }: AddToCartButtonProps) {
+export default function AddToCartButton({ bookId, bookTitle, isAvailable }: AddToCartButtonProps) {
   const { add } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
   const handleAddToCart = async () => {
+    if (!isAvailable) {
+      return; // Не добавляем недоступную книгу
+    }
+    
     setIsAdding(true);
     try {
       add(bookId, 1);
@@ -33,6 +38,17 @@ export default function AddToCartButton({ bookId, bookTitle }: AddToCartButtonPr
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         </svg>
         <span className="font-medium">Добавлено в корзину!</span>
+      </div>
+    );
+  }
+
+  if (!isAvailable) {
+    return (
+      <div className="flex items-center gap-2 text-gray-500 bg-gray-100 px-6 py-3 rounded-lg">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        <span className="font-medium">Книга недоступна</span>
       </div>
     );
   }

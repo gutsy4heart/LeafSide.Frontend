@@ -17,11 +17,15 @@ export default function BookCard({ book }: BookCardProps) {
     e.preventDefault();
     e.stopPropagation();
     
+    if (!book.isAvailable) {
+      return; // Не добавляем недоступную книгу
+    }
+    
     setIsAdding(true);
     try {
       await add(book.id, 1);
     } catch (error) {
-      console.error('Error adding to cart:', error);
+      console.error('BookCard - Error adding to cart:', error);
     } finally {
       // Небольшая задержка для визуального эффекта
       setTimeout(() => setIsAdding(false), 500);
@@ -29,9 +33,16 @@ export default function BookCard({ book }: BookCardProps) {
   };
 
   return (
-    <div className="card p-4 block hover:translate-y-[-2px] hover:shadow-lg transition-all duration-200 group">
+    <div className={`card p-4 block hover:translate-y-[-2px] hover:shadow-lg transition-all duration-200 group ${
+      !book.isAvailable ? 'opacity-75' : ''
+    }`}>
       <Link href={`/books/${book.id}`} className="block">
         <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)] relative">
+          {!book.isAvailable && (
+            <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
+              Недоступно
+            </div>
+          )}
           {book.imageUrl ? (
             <img 
               src={book.imageUrl} 
@@ -64,8 +75,14 @@ export default function BookCard({ book }: BookCardProps) {
       <div className="mt-3 pt-3 border-t border-white/10">
         <button
           onClick={handleAddToCart}
-          disabled={isAdding}
-          className="w-full bg-[var(--accent)] text-white py-2 px-3 rounded-md hover:bg-[var(--accent)]/80 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          disabled={isAdding || !book.isAvailable}
+          className={`w-full py-2 px-3 rounded-md transition-colors text-sm font-medium disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
+            !book.isAvailable
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : isAdding
+              ? 'bg-[var(--accent)]/50 text-white'
+              : 'bg-[var(--accent)] text-white hover:bg-[var(--accent)]/80'
+          }`}
         >
           {isAdding ? (
             <>
@@ -74,6 +91,13 @@ export default function BookCard({ book }: BookCardProps) {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               Добавляем...
+            </>
+          ) : !book.isAvailable ? (
+            <>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Недоступно
             </>
           ) : (
             <>

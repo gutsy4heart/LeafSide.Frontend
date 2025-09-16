@@ -4,12 +4,13 @@ import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
 import Link from "next/link";
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> };
 
 export default async function BookDetails({ params }: Props) {
+  const { id } = await params;
   let book: Book;
   try {
-    book = await fetchJson<Book>(`/api/books/${params.id}`);
+    book = await fetchJson<Book>(`/api/books/${id}`);
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     if (msg.includes(" 404")) {
@@ -69,6 +70,11 @@ export default async function BookDetails({ params }: Props) {
               <p className="text-3xl font-bold text-green-600">
                 € {book.price.toFixed(2)}
               </p>
+              {!book.isAvailable && (
+                <p className="text-sm text-red-500 font-medium mt-2">
+                  ⚠️ Книга временно недоступна
+                </p>
+              )}
             </div>
           )}
           
@@ -80,7 +86,7 @@ export default async function BookDetails({ params }: Props) {
           </div>
           
           <div className="pt-4">
-            <AddToCartButton bookId={book.id} bookTitle={book.title} />
+            <AddToCartButton bookId={book.id} bookTitle={book.title} isAvailable={book.isAvailable} />
           </div>
         </div>
       </div>
