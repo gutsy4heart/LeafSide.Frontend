@@ -5,17 +5,141 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
-  const { isAuthenticated, userInfo, logout, isAdmin, isLoading } = useAuth();
+  const { isAuthenticated, userInfo, logout, isAdmin, isLoading, token } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalBooksPurchased: 0,
+    itemsInCart: 0,
+    favoritesCount: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    countryCode: '+7',
+    gender: 'Male'
+  });
+  const [updating, setUpdating] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+
+  // Функция для загрузки данных профиля из базы данных
+  const fetchUserProfile = async () => {
+    if (!token) return;
+    
+    try {
+      setProfileLoading(true);
+      const response = await fetch('/api/account/profile', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Profile page - Raw profile data:', data);
+        setProfileData({
+          firstName: data.firstName || data.FirstName || '',
+          lastName: data.lastName || data.LastName || '',
+          phoneNumber: data.phoneNumber || data.PhoneNumber || '',
+          countryCode: data.countryCode || data.CountryCode || '+7',
+          gender: data.gender || data.Gender || 'Male'
+        });
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке профиля:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  // Функция для загрузки статистики пользователя
+  const fetchUserStats = async () => {
+    if (!token) return;
+    
+    try {
+      setStatsLoading(true);
+      const response = await fetch('/api/user/stats', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Ошибка при загрузке статистики:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // Функция для обновления профиля
+  const updateProfile = async () => {
+    if (!token) return;
+    
+    try {
+      setUpdating(true);
+      const response = await fetch('/api/account/profile', {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          FirstName: profileData.firstName,
+          LastName: profileData.lastName,
+          PhoneNumber: profileData.phoneNumber,
+          CountryCode: profileData.countryCode,
+          Gender: profileData.gender
+        }),
+      });
+      
+      if (response.ok) {
+        const updatedProfile = await response.json();
+        console.log('Profile page - Updated profile data:', updatedProfile);
+        // Обновляем данные профиля из ответа сервера
+        setProfileData({
+          firstName: updatedProfile.firstName || updatedProfile.FirstName || '',
+          lastName: updatedProfile.lastName || updatedProfile.LastName || '',
+          phoneNumber: updatedProfile.phoneNumber || updatedProfile.PhoneNumber || '',
+          countryCode: updatedProfile.countryCode || updatedProfile.CountryCode || '+7',
+          gender: updatedProfile.gender || updatedProfile.Gender || 'Male'
+        });
+        setIsEditing(false);
+        alert('Профиль успешно обновлен!');
+      } else {
+        const errorData = await response.json();
+        alert(`Ошибка: ${errorData.error || 'Не удалось обновить профиль'}`);
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении профиля:', error);
+      alert('Ошибка при обновлении профиля');
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
       return;
     }
-  }, [isAuthenticated, router]);
+    
+    if (token) {
+      fetchUserProfile();
+      fetchUserStats();
+    }
+  }, [isAuthenticated, router, token]);
 
   const handleLogout = () => {
     logout();
@@ -183,102 +307,197 @@ export default function ProfilePage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Имя
-                      </label>
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          defaultValue={userInfo?.name || ""}
-                          className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                          {userInfo?.name || "Не указано"}
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Имя
+                          </label>
+                          {isEditing ? (
+                            <input 
+                              type="text" 
+                              value={profileData.firstName}
+                              onChange={(e) => setProfileData({...profileData, firstName: e.target.value})}
+                              className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          ) : (
+                            <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                              {profileLoading ? "Загрузка..." : (profileData.firstName || "Не указано")}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Фамилия
-                      </label>
-                      {isEditing ? (
-                        <input 
-                          type="text" 
-                          defaultValue={userInfo?.lastName || ""}
-                          className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      ) : (
-                        <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                          {userInfo?.lastName || "Не указано"}
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Фамилия
+                          </label>
+                          {isEditing ? (
+                            <input 
+                              type="text" 
+                              value={profileData.lastName}
+                              onChange={(e) => setProfileData({...profileData, lastName: e.target.value})}
+                              className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          ) : (
+                            <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                              {profileLoading ? "Загрузка..." : (profileData.lastName || "Не указано")}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Email
-                      </label>
-                      <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                        {userInfo?.email || "Загрузка..."}
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Email
+                          </label>
+                          <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                            {profileLoading ? "Загрузка..." : (userInfo?.email || "Не указано")}
+                          </div>
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Номер телефона
-                      </label>
-                      <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                        {userInfo?.phoneNumber ? `${userInfo.countryCode} ${userInfo.phoneNumber}` : "Не указано"}
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Номер телефона
+                          </label>
+                          {isEditing ? (
+                            <div className="flex">
+                              <select
+                                value={profileData.countryCode}
+                                onChange={(e) => setProfileData({...profileData, countryCode: e.target.value})}
+                                className="px-3 py-2 bg-[var(--card)] border border-white/20 rounded-l-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="+7">+7</option>
+                                <option value="+1">+1</option>
+                                <option value="+44">+44</option>
+                                <option value="+49">+49</option>
+                                <option value="+33">+33</option>
+                              </select>
+                              <input
+                                type="tel"
+                                value={profileData.phoneNumber}
+                                onChange={(e) => setProfileData({...profileData, phoneNumber: e.target.value})}
+                                className="flex-1 px-3 py-2 bg-[var(--card)] border border-white/20 rounded-r-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="1234567890"
+                              />
+                            </div>
+                          ) : (
+                            <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                              {profileLoading ? "Загрузка..." : (profileData.phoneNumber ? `${profileData.countryCode} ${profileData.phoneNumber}` : "Не указано")}
+                            </div>
+                          )}
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Пол
-                      </label>
-                      <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                        {userInfo?.gender === "Male" ? "Мужской" : 
-                         userInfo?.gender === "Female" ? "Женский" : 
-                         userInfo?.gender === "Other" ? "Другой" : "Не указано"}
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Пол
+                          </label>
+                          {isEditing ? (
+                            <select
+                              value={profileData.gender}
+                              onChange={(e) => setProfileData({...profileData, gender: e.target.value})}
+                              className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="Male">Мужской</option>
+                              <option value="Female">Женский</option>
+                              <option value="Other">Другой</option>
+                            </select>
+                          ) : (
+                            <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                              {profileLoading ? "Загрузка..." : (profileData.gender === "Male" ? "Мужской" : 
+                               profileData.gender === "Female" ? "Женский" : 
+                               profileData.gender === "Other" ? "Другой" : "Не указано")}
+                            </div>
+                          )}
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                        Дата регистрации
-                      </label>
-                      <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                        {userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('ru-RU') : "Неизвестно"}
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[var(--muted)] mb-2">
+                            Дата регистрации
+                          </label>
+                          <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
+                            {profileLoading ? "Загрузка..." : (userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('ru-RU') : "Неизвестно")}
+                          </div>
+                        </div>
                   </div>
+                  
+                  {isEditing && (
+                    <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-white/10">
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        disabled={updating}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                      >
+                        Отмена
+                      </button>
+                      <button
+                        onClick={updateProfile}
+                        disabled={updating}
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {updating && (
+                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                        )}
+                        {updating ? 'Сохранение...' : 'Сохранить изменения'}
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Статистика */}
                 <div className="card p-6">
-                  <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
-                    <span className="text-2xl">📊</span>
-                    Статистика
-                  </h2>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-3">
+                      <span className="text-2xl">📊</span>
+                      Статистика
+                    </h2>
+                    <button
+                      onClick={fetchUserStats}
+                      disabled={statsLoading}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <svg className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      {statsLoading ? 'Обновление...' : 'Обновить'}
+                    </button>
+                  </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="text-center p-6 bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl border border-blue-500/30">
-                      <div className="text-3xl font-bold text-blue-400 mb-2">0</div>
+                      <div className="text-3xl font-bold text-blue-400 mb-2">
+                        {statsLoading ? (
+                          <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto"></div>
+                        ) : (
+                          stats.totalOrders
+                        )}
+                      </div>
                       <div className="text-sm text-[var(--muted)]">Заказов</div>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl border border-green-500/30">
-                      <div className="text-3xl font-bold text-green-400 mb-2">0</div>
+                      <div className="text-3xl font-bold text-green-400 mb-2">
+                        {statsLoading ? (
+                          <div className="animate-spin w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full mx-auto"></div>
+                        ) : (
+                          stats.totalBooksPurchased
+                        )}
+                      </div>
                       <div className="text-sm text-[var(--muted)]">Куплено книг</div>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl border border-purple-500/30">
-                      <div className="text-3xl font-bold text-purple-400 mb-2">0</div>
+                      <div className="text-3xl font-bold text-purple-400 mb-2">
+                        {statsLoading ? (
+                          <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
+                        ) : (
+                          stats.itemsInCart
+                        )}
+                      </div>
                       <div className="text-sm text-[var(--muted)]">В корзине</div>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl border border-orange-500/30">
-                      <div className="text-3xl font-bold text-orange-400 mb-2">0</div>
+                      <div className="text-3xl font-bold text-orange-400 mb-2">
+                        {statsLoading ? (
+                          <div className="animate-spin w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full mx-auto"></div>
+                        ) : (
+                          stats.favoritesCount
+                        )}
+                      </div>
                       <div className="text-sm text-[var(--muted)]">Избранное</div>
                     </div>
                   </div>

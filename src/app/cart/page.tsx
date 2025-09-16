@@ -8,7 +8,7 @@ import { fetchJson } from "../../lib/api";
 import Link from "next/link";
 
 export default function CartPage() {
-  const { state, add, remove, clear, count } = useCart();
+  const { state, add, remove, clear, count, loading: cartLoading, error: cartError } = useCart();
   const { isAuthenticated } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,13 +43,12 @@ export default function CartPage() {
     }
   }, [state.items]);
 
-  const updateQuantity = (bookId: string, newQuantity: number) => {
+  const updateQuantity = async (bookId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      remove(bookId);
+      await remove(bookId);
     } else {
-      // Удаляем текущий элемент и добавляем с новым количеством
-      remove(bookId);
-      add(bookId, newQuantity);
+      // Добавляем с новым количеством (API автоматически обновит существующий элемент)
+      await add(bookId, newQuantity);
     }
   };
 
@@ -68,7 +67,7 @@ export default function CartPage() {
     return state.items.reduce((total, item) => total + item.quantity, 0);
   };
 
-  if (loading) {
+  if (loading || cartLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -79,7 +78,7 @@ export default function CartPage() {
     );
   }
 
-  if (error) {
+  if (error || cartError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -89,7 +88,7 @@ export default function CartPage() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Ошибка загрузки</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-gray-600 mb-4">{error || cartError}</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
@@ -184,7 +183,8 @@ export default function CartPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.bookId, item.quantity - 1)}
-                            className="w-8 h-8 rounded-full bg-[var(--card)] border border-white/20 flex items-center justify-center hover:bg-[var(--accent)]/10 transition-colors"
+                            disabled={cartLoading}
+                            className="w-8 h-8 rounded-full bg-[var(--card)] border border-white/20 flex items-center justify-center hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -193,7 +193,8 @@ export default function CartPage() {
                           <span className="w-12 text-center font-medium">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.bookId, item.quantity + 1)}
-                            className="w-8 h-8 rounded-full bg-[var(--card)] border border-white/20 flex items-center justify-center hover:bg-[var(--accent)]/10 transition-colors"
+                            disabled={cartLoading}
+                            className="w-8 h-8 rounded-full bg-[var(--card)] border border-white/20 flex items-center justify-center hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -203,7 +204,8 @@ export default function CartPage() {
                         
                         <button
                           onClick={() => remove(item.bookId)}
-                          className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 transition-colors"
+                          disabled={cartLoading}
+                          className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -220,8 +222,9 @@ export default function CartPage() {
             {/* Кнопка очистки корзины */}
             <div className="mt-6 flex justify-end">
               <button
-                onClick={clear}
-                className="text-red-500 hover:text-red-700 text-sm flex items-center gap-2 transition-colors"
+                onClick={() => clear()}
+                disabled={cartLoading}
+                className="text-red-500 hover:text-red-700 text-sm flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

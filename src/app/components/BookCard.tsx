@@ -18,10 +18,14 @@ export default function BookCard({ book }: BookCardProps) {
     e.stopPropagation();
     
     setIsAdding(true);
-    add(book.id, 1);
-    
-    // Небольшая задержка для визуального эффекта
-    setTimeout(() => setIsAdding(false), 500);
+    try {
+      await add(book.id, 1);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      // Небольшая задержка для визуального эффекта
+      setTimeout(() => setIsAdding(false), 500);
+    }
   };
 
   return (

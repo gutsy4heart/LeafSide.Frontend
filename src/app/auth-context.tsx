@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (token: string): Promise<UserInfo | null> => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/auth/profile', {
+      const response = await fetch('/api/account/profile', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -62,17 +62,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const profile = await response.json();
+      console.log('fetchUserProfile - Raw profile data:', profile);
+      
       return {
-        id: profile.id,
-        email: profile.email,
-        name: profile.firstName + ' ' + profile.lastName,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        phoneNumber: profile.phoneNumber,
-        countryCode: profile.countryCode,
-        gender: profile.gender,
-        roles: profile.roles || [],
-        createdAt: profile.createdAt
+        id: profile.id || profile.Id,
+        email: profile.email || profile.Email,
+        name: (profile.firstName || profile.FirstName || '') + ' ' + (profile.lastName || profile.LastName || ''),
+        firstName: profile.firstName || profile.FirstName,
+        lastName: profile.lastName || profile.LastName,
+        phoneNumber: profile.phoneNumber || profile.PhoneNumber,
+        countryCode: profile.countryCode || profile.CountryCode,
+        gender: profile.gender || profile.Gender,
+        roles: profile.roles || profile.Roles || [],
+        createdAt: profile.createdAt || profile.CreatedAt
       };
     } catch {
       return null;
@@ -99,6 +101,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const roles = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
       const userId = payload.sub || payload.id;
+      
+      // Обрабатываем роли правильно
+      let userRoles: string[] = [];
+      if (roles) {
+        if (Array.isArray(roles)) {
+          userRoles = roles;
+        } else if (typeof roles === 'string') {
+          userRoles = [roles];
+        }
+      }
+      
+      console.log('DecodeToken - Raw roles from JWT:', roles);
+      console.log('DecodeToken - Processed roles:', userRoles);
+      
       return {
         email: payload.email || payload.sub || "Пользователь",
         name: payload.name || payload.given_name || "Пользователь",
@@ -108,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phoneNumber: payload.phoneNumber,
         countryCode: payload.countryCode,
         gender: payload.gender,
-        roles: Array.isArray(roles) ? roles : (roles ? [roles] : []),
+        roles: userRoles,
         createdAt: payload.createdAt,
         exp: payload.exp,
       };
@@ -124,12 +140,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (t) {
           if (isTokenExpired(t)) { clearAuth(); return; }
           setTokenState(t);
-          const userProfile = await fetchUserProfile(t);
-          if (userProfile) {
-            setUserInfo(userProfile);
-          } else {
-            const user = decodeToken(t);
+          
+          // Сначала декодируем токен для получения ролей
+          const user = decodeToken(t);
+          if (user) {
             setUserInfo(user);
+          }
+          
+          // Затем пытаемся получить полный профиль с сервера
+          try {
+            const userProfile = await fetchUserProfile(t);
+            if (userProfile) {
+              setUserInfo(userProfile);
+            }
+          } catch (error) {
+            console.log('Failed to fetch user profile, using token data:', error);
           }
         }
       } catch {}
@@ -142,13 +167,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenState(t);
     if (t) {
       if (isTokenExpired(t)) { clearAuth(); return; }
-      const userProfile = await fetchUserProfile(t);
-      if (userProfile) {
-        setUserInfo(userProfile);
-      } else {
-        const user = decodeToken(t);
+      
+      // Сначала декодируем токен для получения ролей
+      const user = decodeToken(t);
+      if (user) {
         setUserInfo(user);
       }
+      
+      // Затем пытаемся получить полный профиль с сервера
+      try {
+        const userProfile = await fetchUserProfile(t);
+        if (userProfile) {
+          setUserInfo(userProfile);
+        }
+      } catch (error) {
+        console.log('Failed to fetch user profile, using token data:', error);
+      }
+      
       try {
         localStorage.setItem(STORAGE_KEY, t);
       } catch {}
@@ -162,7 +197,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAdmin = useMemo(() => {
-    return userInfo?.roles?.includes("Admin") || false;
+    const hasAdminRole = userInfo?.roles?.includes("Admin") || false;
+    console.log('Auth Context - User roles:', userInfo?.roles);
+    console.log('Auth Context - Is admin:', hasAdminRole);
+    return hasAdminRole;
   }, [userInfo?.roles]);
 
   const value = useMemo<AuthContextType>(

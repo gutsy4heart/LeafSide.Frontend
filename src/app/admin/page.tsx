@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { UserWithRole, UserRole, UpdateUserRoleRequest } from "../../types/user";
 import { Book, CreateBookRequest, UpdateBookRequest, BOOK_GENRES, BOOK_LANGUAGES } from "../../types/book";
+import { Order, OrderStatus, ORDER_STATUSES } from "../../types/order";
+import { AdminCart } from "../../types/cart";
 
 export default function AdminPage() {
   const { isAuthenticated, isAdmin, userInfo, token } = useAuth();
@@ -42,7 +44,7 @@ export default function AdminPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(false);
   const [booksError, setBooksError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'users' | 'books'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'books' | 'orders' | 'carts'>('users');
   const [showAddBookForm, setShowAddBookForm] = useState(false);
   const [showEditBookForm, setShowEditBookForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -75,6 +77,19 @@ export default function AdminPage() {
   const [bookSearchTerm, setBookSearchTerm] = useState('');
   const [bookGenreFilter, setBookGenreFilter] = useState('all');
   const [bookAvailabilityFilter, setBookAvailabilityFilter] = useState('all');
+  
+  // Orders state
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [updatingOrderStatus, setUpdatingOrderStatus] = useState<string | null>(null);
+  
+  // Carts state
+  const [carts, setCarts] = useState<AdminCart[]>([]);
+  const [cartsLoading, setCartsLoading] = useState(false);
+  const [cartsError, setCartsError] = useState<string | null>(null);
 
   // Toast notifications
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error' | 'info'; message: string }>>([]);
@@ -127,6 +142,8 @@ export default function AdminPage() {
     if (token) {
       fetchUsers();
       fetchBooks();
+      fetchOrders();
+      fetchCarts();
     }
   }, [isAuthenticated, isAdmin, token, router]);
 
@@ -225,6 +242,86 @@ export default function AdminPage() {
       setBooksError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setBooksLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    if (!token) {
+      console.log('Admin: No token available for fetching orders');
+      setOrdersError('Токен не найден');
+      setOrdersLoading(false);
+      return;
+    }
+
+    try {
+      console.log('Admin: Fetching orders with token:', token.substring(0, 20) + '...');
+      setOrdersLoading(true);
+      setOrdersError(null);
+      
+      const response = await fetch("/api/admin/orders", {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Admin: Orders response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Admin: Orders error response:', errorData);
+        throw new Error(errorData.error || "Failed to fetch orders");
+      }
+      
+      const data = await response.json();
+      console.log('Admin: Orders data received:', data);
+      setOrders(data);
+    } catch (err) {
+      console.error('Admin: Error fetching orders:', err);
+      setOrdersError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  const fetchCarts = async () => {
+    if (!token) {
+      console.log('Admin: No token available for fetching carts');
+      setCartsError('Токен не найден');
+      setCartsLoading(false);
+      return;
+    }
+
+    try {
+      console.log('Admin: Fetching carts with token:', token.substring(0, 20) + '...');
+      setCartsLoading(true);
+      setCartsError(null);
+      
+      const response = await fetch("/api/admin/carts", {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      console.log('Admin: Carts response status:', response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Admin: Carts error response:', errorData);
+        throw new Error(errorData.error || "Failed to fetch carts");
+      }
+      
+      const data = await response.json();
+      console.log('Admin: Carts data received:', data);
+      setCarts(data);
+    } catch (err) {
+      console.error('Admin: Error fetching carts:', err);
+      setCartsError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setCartsLoading(false);
     }
   };
 
@@ -528,6 +625,43 @@ export default function AdminPage() {
     setDeleteDialog({ isOpen: false, user: null });
   };
 
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      setUpdatingOrderStatus(orderId);
+      setOrdersError(null);
+      
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка при обновлении статуса заказа');
+      }
+      
+      // Обновляем локальное состояние
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId
+            ? { ...order, status, updatedAt: new Date().toISOString() }
+            : order
+        )
+      );
+      
+      showToast(`Статус заказа обновлен на "${status}"`, 'success');
+    } catch (err) {
+      setOrdersError(err instanceof Error ? err.message : 'Неизвестная ошибка');
+      showToast('Ошибка при обновлении статуса заказа', 'error');
+    } finally {
+      setUpdatingOrderStatus(null);
+    }
+  };
+
   const handleCreateUser = async () => {
     try {
       setCreating(true);
@@ -618,11 +752,20 @@ export default function AdminPage() {
     return matchesSearch && matchesGenre && matchesAvailability;
   });
 
+  // Фильтрация заказов
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.customerName.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
+                         order.customerEmail.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
+                         order.id.toLowerCase().includes(orderSearchTerm.toLowerCase());
+    const matchesStatus = orderStatusFilter === 'all' || order.status === orderStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   if (!isAuthenticated || !isAdmin) {
     return null;
   }
 
-  if (loading || booksLoading) {
+  if (loading || booksLoading || ordersLoading || cartsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -678,16 +821,21 @@ export default function AdminPage() {
               Проверить бэкенд
             </button>
             <button
-              onClick={activeTab === 'users' ? fetchUsers : fetchBooks}
-              disabled={loading || booksLoading}
+              onClick={() => {
+                if (activeTab === 'users') fetchUsers();
+                else if (activeTab === 'books') fetchBooks();
+                else if (activeTab === 'orders') fetchOrders();
+                else if (activeTab === 'carts') fetchCarts();
+              }}
+              disabled={loading || booksLoading || ordersLoading || cartsLoading}
               className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              {loading || booksLoading ? 'Загрузка...' : 'Обновить'}
+              {loading || booksLoading || ordersLoading || cartsLoading ? 'Загрузка...' : 'Обновить'}
             </button>
-            {activeTab === 'users' ? (
+            {activeTab === 'users' && (
               <button
                 onClick={() => setShowAddUserForm(true)}
                 className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2"
@@ -697,7 +845,8 @@ export default function AdminPage() {
                 </svg>
                 Добавить пользователя
               </button>
-            ) : (
+            )}
+            {activeTab === 'books' && (
               <button
                 onClick={() => setShowAddBookForm(true)}
                 className="px-4 py-2 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors flex items-center gap-2"
@@ -746,11 +895,41 @@ export default function AdminPage() {
                 Книги ({books.length})
               </div>
             </button>
+            <button
+              onClick={() => setActiveTab('orders')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'orders'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--card)]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                Заказы ({orders.length})
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('carts')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'carts'
+                  ? 'border-[var(--accent)] text-[var(--accent)]'
+                  : 'border-transparent text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--card)]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+                Корзины ({carts.length})
+              </div>
+            </button>
           </nav>
         </div>
       </div>
 
-      {(error || booksError) && (
+      {(error || booksError || ordersError || cartsError) && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -759,14 +938,14 @@ export default function AdminPage() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-800">{error || booksError}</p>
+              <p className="text-sm text-red-800">{error || booksError || ordersError || cartsError}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Статистика */}
-      {activeTab === 'users' ? (
+      {activeTab === 'users' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
@@ -824,7 +1003,8 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
-      ) : (
+      )}
+      {activeTab === 'books' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
             <div className="flex items-center justify-between">
@@ -882,6 +1062,131 @@ export default function AdminPage() {
               <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeTab === 'orders' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Всего заказов</p>
+                <p className="text-3xl font-bold">{orders.length}</p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Ожидающие</p>
+                <p className="text-3xl font-bold">{orders.filter(o => o.status === 'Pending').length}</p>
+              </div>
+              <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Доставленные</p>
+                <p className="text-3xl font-bold">{orders.filter(o => o.status === 'Delivered').length}</p>
+              </div>
+              <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Общая сумма</p>
+                <p className="text-3xl font-bold">
+                  € {orders.reduce((sum, order) => sum + order.totalAmount, 0).toFixed(0)}
+                </p>
+              </div>
+              <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {activeTab === 'carts' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Всего корзин</p>
+                <p className="text-3xl font-bold">{carts.length}</p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Активные корзины</p>
+                <p className="text-3xl font-bold">{carts.filter(c => c.items.length > 0).length}</p>
+              </div>
+              <div className="bg-green-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm font-medium">Пустые корзины</p>
+                <p className="text-3xl font-bold">{carts.filter(c => c.items.length === 0).length}</p>
+              </div>
+              <div className="bg-purple-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-orange-100 text-sm font-medium">Средний размер</p>
+                <p className="text-3xl font-bold">
+                  {carts.length > 0 
+                    ? Math.round(carts.reduce((sum, cart) => sum + cart.items.length, 0) / carts.length)
+                    : 0
+                  } товаров
+                </p>
+              </div>
+              <div className="bg-orange-400 bg-opacity-30 rounded-full p-3">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
             </div>
@@ -1016,6 +1321,81 @@ export default function AdminPage() {
             
             <div className="mt-4 text-sm text-gray-600">
               Показано {filteredBooks.length} из {books.length} книг
+            </div>
+          </>
+        )}
+        {activeTab === 'orders' && (
+          <>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Поиск заказов
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Поиск по клиенту, email или ID заказа..."
+                    value={orderSearchTerm}
+                    onChange={(e) => setOrderSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="md:w-48">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Статус
+                </label>
+                <select
+                  value={orderStatusFilter}
+                  onChange={(e) => setOrderStatusFilter(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="all">Все статусы</option>
+                  {ORDER_STATUSES.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex items-end">
+                <button
+                  onClick={() => {
+                    setOrderSearchTerm('');
+                    setOrderStatusFilter('all');
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                >
+                  Сбросить
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              Показано {filteredOrders.length} из {orders.length} заказов
+            </div>
+          </>
+        )}
+        {activeTab === 'carts' && (
+          <>
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Корзины пользователей
+                </label>
+                <p className="text-sm text-gray-500">
+                  Просмотр корзин всех пользователей системы
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              Показано {carts.length} корзин
             </div>
           </>
         )}
@@ -1233,6 +1613,161 @@ export default function AdminPage() {
                       </div>
                     </td>
                   </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'orders' && (
+            <table className="min-w-full divide-y divide-white/10">
+              <thead className="bg-[var(--card)]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    ID заказа
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Клиент
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Статус
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Сумма
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Дата
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Действия
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-[var(--card)] divide-y divide-white/10">
+                {filteredOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        <p className="text-lg font-medium text-gray-900 mb-2">Заказы не найдены</p>
+                        <p className="text-gray-500">
+                          {orderSearchTerm || orderStatusFilter !== 'all'
+                            ? 'Попробуйте изменить параметры поиска или фильтрации'
+                            : 'Заказы еще не загружены'
+                          }
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredOrders.map((order) => (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
+                        #{order.id.substring(0, 8)}...
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-[var(--foreground)]">
+                            {order.customerName}
+                          </div>
+                          <div className="text-sm text-[var(--muted)]">
+                            {order.customerEmail}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          order.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                          order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' :
+                          order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
+                        € {order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--muted)]">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                            disabled={updatingOrderStatus === order.id}
+                            className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                          >
+                            {ORDER_STATUSES.map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+          {activeTab === 'carts' && (
+            <table className="min-w-full divide-y divide-white/10">
+              <thead className="bg-[var(--card)]">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    ID корзины
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    ID пользователя
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Количество товаров
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
+                    Статус
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-[var(--card)] divide-y divide-white/10">
+                {carts.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                        </svg>
+                        <p className="text-lg font-medium text-gray-900 mb-2">Корзины не найдены</p>
+                        <p className="text-gray-500">
+                          Корзины еще не загружены
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  carts.map((cart) => (
+                    <tr key={cart.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
+                        #{cart.id.substring(0, 8)}...
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
+                        #{cart.userId.substring(0, 8)}...
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground)]">
+                        {cart.items.length} товаров
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          cart.items.length > 0 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {cart.items.length > 0 ? 'Активна' : 'Пустая'}
+                        </span>
+                      </td>
+                    </tr>
                   ))
                 )}
               </tbody>
