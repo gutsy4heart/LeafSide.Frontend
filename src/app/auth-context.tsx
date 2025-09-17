@@ -23,6 +23,8 @@ type AuthContextType = {
   isLoading: boolean;
   setToken: (t: string | null) => Promise<void>;
   logout: () => void;
+  refreshToken: () => Promise<boolean>;
+  checkAndRefreshToken: () => Promise<boolean>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -53,11 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.status === 401 || response.status === 403) {
-        clearAuth();
+        console.log('fetchUserProfile - Unauthorized, but not clearing auth');
         return null;
       }
 
       if (!response.ok) {
+        console.log('fetchUserProfile - Response not ok:', response.status);
         return null;
       }
 
@@ -76,7 +79,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         roles: profile.roles || profile.Roles || [],
         createdAt: profile.createdAt || profile.CreatedAt
       };
-    } catch {
+    } catch (error) {
+      console.log('fetchUserProfile - Error:', error);
       return null;
     } finally {
       setIsLoading(false);
@@ -89,9 +93,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const payload = JSON.parse(atob(t.split('.')[1]));
       if (!payload?.exp) return false;
       const nowSeconds = Math.floor(Date.now() / 1000);
-      return payload.exp <= nowSeconds;
-    } catch {
-      return false;
+      const isExpired = payload.exp <= nowSeconds;
+      console.log('Token expiration check:', { exp: payload.exp, now: nowSeconds, isExpired });
+      return isExpired;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return true; // Если не можем декодировать токен, считаем его истекшим
     }
   };
 
@@ -136,9 +143,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        setIsLoading(true);
         const t = localStorage.getItem(STORAGE_KEY);
         if (t) {
-          if (isTokenExpired(t)) { clearAuth(); return; }
+          if (isTokenExpired(t)) { 
+            clearAuth(); 
+            setIsLoading(false);
+            return; 
+          }
           setTokenState(t);
           
           // Сначала декодируем токен для получения ролей
@@ -147,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUserInfo(user);
           }
           
-          // Затем пытаемся получить полный профиль с сервера
+          // Затем пытаемся получить полный профиль с сервера (не критично)
           try {
             const userProfile = await fetchUserProfile(t);
             if (userProfile) {
@@ -155,45 +167,106 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             console.log('Failed to fetch user profile, using token data:', error);
+            // Не очищаем авторизацию, если не удалось получить профиль
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     initializeAuth();
   }, []);
 
   const setToken = async (t: string | null) => {
+    console.log('AuthContext - Setting token:', t ? t.substring(0, 20) + '...' : 'null');
     setTokenState(t);
     if (t) {
-      if (isTokenExpired(t)) { clearAuth(); return; }
-      
-      // Сначала декодируем токен для получения ролей
-      const user = decodeToken(t);
-      if (user) {
-        setUserInfo(user);
+      if (isTokenExpired(t)) { 
+        console.log('AuthContext - Token expired, clearing auth');
+        clearAuth(); 
+        return; 
       }
       
-      // Затем пытаемся получить полный профиль с сервера
-      try {
-        const userProfile = await fetchUserProfile(t);
-        if (userProfile) {
-          setUserInfo(userProfile);
-        }
-      } catch (error) {
-        console.log('Failed to fetch user profile, using token data:', error);
-      }
-      
+      // Сначала сохраняем токен в localStorage
       try {
         localStorage.setItem(STORAGE_KEY, t);
       } catch {}
+      
+      // Декодируем токен для получения ролей
+      const user = decodeToken(t);
+      if (user) {
+        console.log('AuthContext - Decoded user from token:', user);
+        setUserInfo(user);
+      }
+      
+      // Затем пытаемся получить полный профиль с сервера (не критично для авторизации)
+      try {
+        const userProfile = await fetchUserProfile(t);
+        if (userProfile) {
+          console.log('AuthContext - Fetched user profile from server:', userProfile);
+          setUserInfo(userProfile);
+        }
+      } catch (error) {
+        console.log('AuthContext - Failed to fetch user profile, using token data:', error);
+        // Не очищаем авторизацию, если не удалось получить профиль
+      }
     } else {
+      console.log('AuthContext - Clearing auth (no token)');
       clearAuth();
     }
   };
 
   const logout = () => {
     clearAuth();
+  };
+
+  // Функция для проверки и обновления токена при необходимости
+  const checkAndRefreshToken = async (): Promise<boolean> => {
+    if (!token) return false;
+    
+    // Проверяем, истек ли токен
+    if (isTokenExpired(token)) {
+      console.log('AuthContext - Token expired, attempting refresh');
+      return await refreshToken();
+    }
+    
+    return true;
+  };
+
+  // Функция для обновления токена
+  const refreshToken = async (): Promise<boolean> => {
+    try {
+      console.log('AuthContext - Attempting to refresh token');
+      const response = await fetch('/api/account/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          console.log('AuthContext - Token refreshed successfully');
+          // Используем setToken для полного обновления состояния
+          await setToken(data.token);
+          return true;
+        }
+      } else {
+        console.log('AuthContext - Token refresh failed:', response.status);
+      }
+    } catch (error) {
+      console.error('AuthContext - Error refreshing token:', error);
+    }
+    
+    // Если обновление не удалось, выходим из системы
+    console.log('AuthContext - Token refresh failed, logging out');
+    clearAuth();
+    return false;
   };
 
   const isAdmin = useMemo(() => {
@@ -203,18 +276,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return hasAdminRole;
   }, [userInfo?.roles]);
 
-  const value = useMemo<AuthContextType>(
-    () => ({ 
+  const value = useMemo<AuthContextType>(() => {
+    // Простая проверка - если есть токен и не загружается, то авторизован
+    const authenticated = Boolean(token) && !isLoading;
+    
+    console.log('AuthContext - Computing value:', {
+      hasToken: !!token,
+      isLoading,
+      authenticated,
+      userInfo: !!userInfo
+    });
+    
+    return { 
       token, 
-      isAuthenticated: Boolean(token), 
+      isAuthenticated: authenticated, 
       userInfo,
       isAdmin,
       isLoading,
       setToken, 
-      logout 
-    }),
-    [token, userInfo, isAdmin, isLoading]
-  );
+      logout,
+      refreshToken,
+      checkAndRefreshToken
+    };
+  }, [token, userInfo, isAdmin, isLoading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

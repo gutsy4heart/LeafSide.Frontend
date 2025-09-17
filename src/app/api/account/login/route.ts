@@ -19,13 +19,13 @@ console.log("ENV_BASE:", ENV_BASE);
 console.log("CANDIDATES:", CANDIDATES);
 
 export async function POST(req: Request) {
-  const form = await req.formData();
+  const body = await req.json();
   const errors: Array<{ url: string; error: string }> = [];
   
   console.log("=== LOGIN API ROUTE DEBUG ===");
   console.log("Attempting to connect to backend...");
   console.log("Available candidates:", CANDIDATES);
-  console.log("Form data:", Object.fromEntries(form.entries()));
+  console.log("Request body:", body);
   console.log("Request URL:", req.url);
   console.log("Request method:", req.method);
   
@@ -52,9 +52,11 @@ export async function POST(req: Request) {
       
       const res = await fetch(url, { 
         method: "POST", 
-        body: form, 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body), 
         signal: controller.signal
-        // Не указываем Content-Type, чтобы браузер сам установил правильный заголовок для FormData
       });
       
       clearTimeout(timeout);

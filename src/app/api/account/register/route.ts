@@ -13,14 +13,21 @@ const CANDIDATES = [
 ].filter(Boolean);
 
 export async function POST(req: Request) {
-  const form = await req.formData();
+  const body = await req.json();
   const errors: Array<{ url: string; error: string }> = [];
   for (const base of CANDIDATES) {
     const url = `${base}/api/Account/register`;
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(url, { method: "POST", body: form, signal: controller.signal });
+      const res = await fetch(url, { 
+        method: "POST", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body), 
+        signal: controller.signal 
+      });
       clearTimeout(timeout);
       if (!res.ok) {
         const text = await res.text();

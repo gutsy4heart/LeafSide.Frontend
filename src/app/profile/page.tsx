@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function ProfilePage() {
-  const { isAuthenticated, userInfo, logout, isAdmin, isLoading, token } = useAuth();
+  const { isAuthenticated, userInfo, logout, isAdmin, isLoading, token, refreshToken, checkAndRefreshToken } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
@@ -28,14 +28,38 @@ export default function ProfilePage() {
 
   // Функция для загрузки данных профиля из базы данных
   const fetchUserProfile = async () => {
-    if (!token) return;
+    if (!token) {
+      console.log('Profile page - No token available for profile fetch');
+      return;
+    }
+    
+    if (isLoading) {
+      console.log('Profile page - Still loading, skipping profile fetch');
+      return;
+    }
+    
+    // Проверяем и обновляем токен при необходимости
+    const tokenValid = await checkAndRefreshToken();
+    if (!tokenValid) {
+      console.log('Profile page - Token invalid, skipping profile fetch');
+      return;
+    }
+    
+    // Получаем актуальный токен из контекста после возможного обновления
+    const currentToken = getCurrentToken();
+    
+    if (!currentToken) {
+      console.log('Profile page - No current token available for profile');
+      return;
+    }
     
     try {
       setProfileLoading(true);
+      console.log('Profile page - Fetching profile with token:', currentToken.substring(0, 20) + '...');
       const response = await fetch('/api/account/profile', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -50,6 +74,56 @@ export default function ProfilePage() {
           countryCode: data.countryCode || data.CountryCode || userInfo?.countryCode || '+7',
           gender: data.gender || data.Gender || userInfo?.gender || 'Male'
         });
+      } else if (response.status === 401) {
+        console.error('Profile page - Unauthorized (401) when loading profile');
+        // Если 401, пытаемся обновить токен
+        console.log('Profile page - Attempting to refresh token for profile...');
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          console.log('Profile page - Token refreshed, retrying profile fetch...');
+          // Получаем актуальный токен из контекста после обновления
+          const updatedToken = getCurrentToken();
+          if (updatedToken) {
+            // Повторяем запрос с новым токеном
+            const retryResponse = await fetch('/api/account/profile', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${updatedToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json();
+              console.log('Profile page - Profile data received after refresh:', retryData);
+              setProfileData({
+                firstName: retryData.firstName || retryData.FirstName || userInfo?.firstName || '',
+                lastName: retryData.lastName || retryData.LastName || userInfo?.lastName || '',
+                phoneNumber: retryData.phoneNumber || retryData.PhoneNumber || userInfo?.phoneNumber || '',
+                countryCode: retryData.countryCode || retryData.CountryCode || userInfo?.countryCode || '+7',
+                gender: retryData.gender || retryData.Gender || userInfo?.gender || 'Male'
+              });
+            } else {
+              console.log('Profile page - Profile retry failed, using fallback data');
+              setProfileData({
+                firstName: userInfo?.firstName || '',
+                lastName: userInfo?.lastName || '',
+                phoneNumber: userInfo?.phoneNumber || '',
+                countryCode: userInfo?.countryCode || '+7',
+                gender: userInfo?.gender || 'Male'
+              });
+            }
+          }
+        } else {
+          console.log('Profile page - Token refresh failed for profile, using fallback data');
+          setProfileData({
+            firstName: userInfo?.firstName || '',
+            lastName: userInfo?.lastName || '',
+            phoneNumber: userInfo?.phoneNumber || '',
+            countryCode: userInfo?.countryCode || '+7',
+            gender: userInfo?.gender || 'Male'
+          });
+        }
       } else {
         console.error('Ошибка при загрузке профиля:', response.status);
         // Используем данные из userInfo как fallback
@@ -78,17 +152,45 @@ export default function ProfilePage() {
 
   // Функция для загрузки статистики пользователя
   const fetchUserStats = async () => {
-    if (!token) return;
+    if (!token) {
+      console.log('Profile page - No token available for stats');
+      return;
+    }
+    
+    if (isLoading) {
+      console.log('Profile page - Still loading, skipping stats fetch');
+      return;
+    }
+    
+    // Проверяем и обновляем токен при необходимости
+    const tokenValid = await checkAndRefreshToken();
+    if (!tokenValid) {
+      console.log('Profile page - Token invalid, skipping stats fetch');
+      return;
+    }
+    
+    // Получаем актуальный токен из контекста после возможного обновления
+    const currentToken = getCurrentToken();
+    
+    if (!currentToken) {
+      console.log('Profile page - No current token available for stats');
+      return;
+    }
     
     try {
       setStatsLoading(true);
+      console.log('Profile page - Fetching stats with token:', currentToken.substring(0, 20) + '...');
+      
       const response = await fetch('/api/user/stats', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
       });
+      
+      console.log('Profile page - Stats response status:', response.status);
+      console.log('Profile page - Stats response headers:', Object.fromEntries(response.headers.entries()));
       
       if (response.ok) {
         const data = await response.json();
@@ -99,9 +201,44 @@ export default function ProfilePage() {
           itemsInCart: data.itemsInCart || 0,
           favoritesCount: data.favoritesCount || 0
         });
+      } else if (response.status === 401) {
+        console.error('Profile page - Unauthorized (401) - token may be expired or invalid');
+        // Если 401, пытаемся обновить токен
+        console.log('Profile page - Attempting to refresh token...');
+        const refreshed = await refreshToken();
+        if (refreshed) {
+          console.log('Profile page - Token refreshed, retrying stats fetch...');
+          // Получаем актуальный токен из контекста после обновления
+          const updatedToken = getCurrentToken();
+          if (updatedToken) {
+            // Повторяем запрос с новым токеном
+            const retryResponse = await fetch('/api/user/stats', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${updatedToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (retryResponse.ok) {
+              const retryData = await retryResponse.json();
+              console.log('Profile page - Stats data received after refresh:', retryData);
+              setStats({
+                totalOrders: retryData.totalOrders || 0,
+                totalBooksPurchased: retryData.totalBooksPurchased || 0,
+                itemsInCart: retryData.itemsInCart || 0,
+                favoritesCount: retryData.favoritesCount || 0
+              });
+            } else {
+              console.log('Profile page - Retry failed, keeping current stats');
+            }
+          }
+        } else {
+          console.log('Profile page - Token refresh failed, keeping current stats');
+        }
       } else {
-        console.error('Ошибка при загрузке статистики:', response.status);
-        // Устанавливаем значения по умолчанию при ошибке
+        console.error('Profile page - Error loading stats:', response.status);
+        // Устанавливаем значения по умолчанию при других ошибках
         setStats({
           totalOrders: 0,
           totalBooksPurchased: 0,
@@ -110,29 +247,44 @@ export default function ProfilePage() {
         });
       }
     } catch (error) {
-      console.error('Ошибка при загрузке статистики:', error);
-      // Устанавливаем значения по умолчанию при ошибке
-      setStats({
-        totalOrders: 0,
-        totalBooksPurchased: 0,
-        itemsInCart: 0,
-        favoritesCount: 0
-      });
-    } finally {
-      setStatsLoading(false);
-    }
+        console.error('Profile page - Error loading stats:', error);
+        // Устанавливаем значения по умолчанию при ошибке
+        setStats({
+          totalOrders: 0,
+          totalBooksPurchased: 0,
+          itemsInCart: 0,
+          favoritesCount: 0
+        });
+      } finally {
+        setStatsLoading(false);
+      }
   };
 
   // Функция для обновления профиля
   const updateProfile = async () => {
     if (!token) return;
     
+    // Проверяем и обновляем токен при необходимости
+    const tokenValid = await checkAndRefreshToken();
+    if (!tokenValid) {
+      console.log('Profile page - Token invalid for update');
+      return;
+    }
+    
+    // Получаем актуальный токен из контекста после возможного обновления
+    const currentToken = getCurrentToken();
+    
+    if (!currentToken) {
+      console.log('Profile page - No current token available for update');
+      return;
+    }
+    
     try {
       setUpdating(true);
       const response = await fetch('/api/account/profile', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          'Authorization': `Bearer ${currentToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -170,16 +322,57 @@ export default function ProfilePage() {
   };
 
   useEffect(() => {
+    console.log('Profile page - useEffect triggered:', { 
+      isAuthenticated, 
+      isLoading, 
+      hasToken: !!token,
+      tokenPreview: token ? token.substring(0, 20) + '...' : 'null',
+      userInfo: userInfo ? { email: userInfo.email, roles: userInfo.roles } : null
+    });
+    
+    // Если не авторизован, перенаправляем на логин
     if (!isAuthenticated) {
+      console.log('Profile page - Not authenticated, redirecting to login');
       router.push("/login");
       return;
     }
     
-    if (token) {
+    // Если загружается, ждем
+    if (isLoading) {
+      console.log('Profile page - Still loading auth data, waiting...');
+      return;
+    }
+    
+    // Если нет токена, перенаправляем на логин
+    if (!token) {
+      console.log('Profile page - No token available, redirecting to login');
+      router.push("/login");
+      return;
+    }
+    
+    // Добавляем небольшую задержку для стабильности
+    const timer = setTimeout(() => {
+      console.log('Profile page - Loading profile and stats with token:', token.substring(0, 20) + '...');
+      fetchUserProfile();
+      fetchUserStats();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, router, token, isLoading]);
+
+  // Отдельный useEffect для отслеживания изменений токена и перезагрузки данных
+  useEffect(() => {
+    if (isAuthenticated && token && !isLoading) {
+      console.log('Profile page - Token changed, reloading data');
       fetchUserProfile();
       fetchUserStats();
     }
-  }, [isAuthenticated, router, token]);
+  }, [token]);
+
+  // Функция для получения актуального токена из контекста
+  const getCurrentToken = () => {
+    return token;
+  };
 
   const handleLogout = () => {
     logout();
@@ -547,6 +740,12 @@ export default function ProfilePage() {
                       <p className="text-[var(--muted)] text-sm">
                         Статистика пока недоступна. Данные появятся после совершения покупок.
                       </p>
+                      <button
+                        onClick={fetchUserStats}
+                        className="mt-2 px-3 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
+                      >
+                        Попробовать снова
+                      </button>
                     </div>
                   )}
                 </div>

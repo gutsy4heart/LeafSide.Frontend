@@ -57,18 +57,20 @@ export default function RegisterPage() {
     setLoading(true);
     
     try {
-      const form = new FormData();
-      form.append("Email", email);
-      form.append("Password", password);
-      form.append("FirstName", firstName);
-      form.append("LastName", lastName);
-      form.append("PhoneNumber", phoneNumber);
-      form.append("CountryCode", countryCode);
-      form.append("Gender", gender);
-      
       const res = await fetch("/api/account/register", { 
         method: "POST", 
-        body: form 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          countryCode: countryCode,
+          gender: gender
+        })
       });
       
       if (!res.ok) {

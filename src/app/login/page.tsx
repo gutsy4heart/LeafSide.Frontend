@@ -18,13 +18,15 @@ export default function LoginPage() {
     setError(null);
     
     try {
-      const form = new FormData();
-      form.append("Email", email);
-      form.append("Password", password);
-      
       const res = await fetch("/api/account/login", { 
         method: "POST", 
-        body: form 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
       });
       
       if (!res.ok) {
@@ -76,7 +78,13 @@ export default function LoginPage() {
     try {
       const res = await fetch("/api/account/login", {
         method: "POST",
-        body: new FormData()
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "test@test.com",
+          password: "test"
+        })
       });
       
       if (res.status === 502) {
