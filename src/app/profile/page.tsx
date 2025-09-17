@@ -44,15 +44,33 @@ export default function ProfilePage() {
         const data = await response.json();
         console.log('Profile page - Raw profile data:', data);
         setProfileData({
-          firstName: data.firstName || data.FirstName || '',
-          lastName: data.lastName || data.LastName || '',
-          phoneNumber: data.phoneNumber || data.PhoneNumber || '',
-          countryCode: data.countryCode || data.CountryCode || '+7',
-          gender: data.gender || data.Gender || 'Male'
+          firstName: data.firstName || data.FirstName || userInfo?.firstName || '',
+          lastName: data.lastName || data.LastName || userInfo?.lastName || '',
+          phoneNumber: data.phoneNumber || data.PhoneNumber || userInfo?.phoneNumber || '',
+          countryCode: data.countryCode || data.CountryCode || userInfo?.countryCode || '+7',
+          gender: data.gender || data.Gender || userInfo?.gender || 'Male'
+        });
+      } else {
+        console.error('Ошибка при загрузке профиля:', response.status);
+        // Используем данные из userInfo как fallback
+        setProfileData({
+          firstName: userInfo?.firstName || '',
+          lastName: userInfo?.lastName || '',
+          phoneNumber: userInfo?.phoneNumber || '',
+          countryCode: userInfo?.countryCode || '+7',
+          gender: userInfo?.gender || 'Male'
         });
       }
     } catch (error) {
       console.error('Ошибка при загрузке профиля:', error);
+      // Используем данные из userInfo как fallback
+      setProfileData({
+        firstName: userInfo?.firstName || '',
+        lastName: userInfo?.lastName || '',
+        phoneNumber: userInfo?.phoneNumber || '',
+        countryCode: userInfo?.countryCode || '+7',
+        gender: userInfo?.gender || 'Male'
+      });
     } finally {
       setProfileLoading(false);
     }
@@ -74,10 +92,32 @@ export default function ProfilePage() {
       
       if (response.ok) {
         const data = await response.json();
-        setStats(data);
+        console.log('Profile page - Stats data received:', data);
+        setStats({
+          totalOrders: data.totalOrders || 0,
+          totalBooksPurchased: data.totalBooksPurchased || 0,
+          itemsInCart: data.itemsInCart || 0,
+          favoritesCount: data.favoritesCount || 0
+        });
+      } else {
+        console.error('Ошибка при загрузке статистики:', response.status);
+        // Устанавливаем значения по умолчанию при ошибке
+        setStats({
+          totalOrders: 0,
+          totalBooksPurchased: 0,
+          itemsInCart: 0,
+          favoritesCount: 0
+        });
       }
     } catch (error) {
       console.error('Ошибка при загрузке статистики:', error);
+      // Устанавливаем значения по умолчанию при ошибке
+      setStats({
+        totalOrders: 0,
+        totalBooksPurchased: 0,
+        itemsInCart: 0,
+        favoritesCount: 0
+      });
     } finally {
       setStatsLoading(false);
     }
@@ -201,8 +241,8 @@ export default function ProfilePage() {
                 )}
               </div>
               <h3 className="font-bold text-[var(--foreground)] text-lg">
-                {userInfo?.firstName && userInfo?.lastName 
-                  ? `${userInfo.firstName} ${userInfo.lastName}` 
+                {profileData.firstName && profileData.lastName 
+                  ? `${profileData.firstName} ${profileData.lastName}` 
                   : userInfo?.name || "Пользователь"}
               </h3>
               <p className="text-sm text-[var(--muted)] mb-2">{userInfo?.email}</p>
@@ -501,6 +541,14 @@ export default function ProfilePage() {
                       <div className="text-sm text-[var(--muted)]">Избранное</div>
                     </div>
                   </div>
+                  
+                  {!statsLoading && stats.totalOrders === 0 && stats.totalBooksPurchased === 0 && stats.itemsInCart === 0 && stats.favoritesCount === 0 && (
+                    <div className="text-center py-4">
+                      <p className="text-[var(--muted)] text-sm">
+                        Статистика пока недоступна. Данные появятся после совершения покупок.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
