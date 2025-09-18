@@ -400,7 +400,7 @@ export default function ProfilePage() {
   const tabs = [
     { id: "profile", label: "Профиль", icon: "👤" },
     { id: "orders", label: "Заказы", icon: "📦" },
-    { id: "favorites", label: "Избранное", icon: "❤️" },
+    // { id: "favorites", label: "Избранное", icon: "❤️" },
     { id: "settings", label: "Настройки", icon: "⚙️" }
   ];
 
@@ -511,10 +511,10 @@ export default function ProfilePage() {
                   )}
                 </button>
                 
-                <button 
+                {/* <button 
                   onClick={() => setActiveTab('favorites')}
                   className="w-full text-left px-3 py-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--card)] rounded-lg transition-colors flex items-center gap-2"
-                >
+                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
@@ -524,7 +524,7 @@ export default function ProfilePage() {
                       {stats.favoritesCount}
                     </span>
                   )}
-                </button>
+                </button> */}
 
                 {isAdmin && (
                   <button 
@@ -757,7 +757,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="text-sm text-[var(--muted)]">В корзине</div>
                     </div>
-                    <div className="text-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl border border-orange-500/30">
+                    {/* <div className="text-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl border border-orange-500/30">
                       <div className="text-3xl font-bold text-orange-400 mb-2">
                         {statsLoading ? (
                           <div className="animate-spin w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full mx-auto"></div>
@@ -766,7 +766,7 @@ export default function ProfilePage() {
                         )}
                       </div>
                       <div className="text-sm text-[var(--muted)]">Избранное</div>
-                    </div>
+                    </div> */}
                   </div>
                   
                   {!statsLoading && stats.totalOrders === 0 && stats.totalBooksPurchased === 0 && stats.itemsInCart === 0 && stats.favoritesCount === 0 && (
@@ -836,8 +836,8 @@ export default function ProfilePage() {
                   <div>
                     <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Безопасность</h3>
                     <div className="space-y-3">
-                      <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors">
-                        <div className="font-medium text-[var(--foreground)]">Изменить пароль</div>
+                      <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors" disabled>
+                        <div className="font-medium text-[var(--foreground)]">Изменить пароль(в разработке)</div>
                         <div className="text-sm text-[var(--muted)]">Обновите пароль для безопасности</div>
                       </button>
                       <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors" disabled>
