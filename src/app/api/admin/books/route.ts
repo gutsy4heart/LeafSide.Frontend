@@ -13,7 +13,7 @@ function mapToAdminBook(b: any) {
     language: b.language ?? "Russian",
     pageCount: Number(b.pageCount ?? 0),
     price: Number(b.price ?? 0),
-    coverImageUrl: b.imageUrl ?? b.coverImageUrl ?? "",
+    imageUrl: b.imageUrl ?? b.coverImageUrl ?? "",
     isAvailable: b.isAvailable ?? true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

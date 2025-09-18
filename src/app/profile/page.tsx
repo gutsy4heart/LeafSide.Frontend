@@ -272,11 +272,9 @@ export default function ProfilePage() {
       return;
     }
     
-    // Получаем актуальный токен из контекста после возможного обновления
-    const currentToken = getCurrentToken();
-    
-    if (!currentToken) {
-      console.log('Profile page - No current token available for update');
+    // Используем токен из контекста
+    if (!token) {
+      console.log('Profile page - No token available for update');
       return;
     }
     
@@ -285,7 +283,7 @@ export default function ProfilePage() {
       const response = await fetch('/api/account/profile', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${currentToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -297,22 +295,41 @@ export default function ProfilePage() {
         }),
       });
       
+      console.log('Profile page - Response status:', response.status, response.statusText);
+      console.log('Profile page - Response content-type:', response.headers.get('content-type'));
+
       if (response.ok) {
-        const updatedProfile = await response.json();
-        console.log('Profile page - Updated profile data:', updatedProfile);
-        // Обновляем данные профиля из ответа сервера
-        setProfileData({
-          firstName: updatedProfile.firstName || updatedProfile.FirstName || '',
-          lastName: updatedProfile.lastName || updatedProfile.LastName || '',
-          phoneNumber: updatedProfile.phoneNumber || updatedProfile.PhoneNumber || '',
-          countryCode: updatedProfile.countryCode || updatedProfile.CountryCode || '+7',
-          gender: updatedProfile.gender || updatedProfile.Gender || 'Male'
-        });
-        setIsEditing(false);
-        alert('Профиль успешно обновлен!');
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const updatedProfile = await response.json();
+          console.log('Profile page - Updated profile data:', updatedProfile);
+          // Обновляем данные профиля из ответа сервера
+          setProfileData({
+            firstName: updatedProfile.firstName || updatedProfile.FirstName || '',
+            lastName: updatedProfile.lastName || updatedProfile.LastName || '',
+            phoneNumber: updatedProfile.phoneNumber || updatedProfile.PhoneNumber || '',
+            countryCode: updatedProfile.countryCode || updatedProfile.CountryCode || '+7',
+            gender: updatedProfile.gender || updatedProfile.Gender || 'Male'
+          });
+          setIsEditing(false);
+          alert('Профиль успешно обновлен!');
+        } else {
+          // Если ответ не JSON, но статус OK, считаем успешным
+          console.log('Profile page - Non-JSON response, but status OK');
+          setIsEditing(false);
+          alert('Профиль успешно обновлен!');
+        }
       } else {
-        const errorData = await response.json();
-        alert(`Ошибка: ${errorData.error || 'Не удалось обновить профиль'}`);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          console.error('Profile page - Error data (JSON):', errorData);
+          alert(`Ошибка: ${errorData.error || 'Не удалось обновить профиль'}`);
+        } else {
+          const text = await response.text();
+          console.error('Profile page - Error data (not JSON):', text.substring(0, 200));
+          alert(`Ошибка сервера: ${text.substring(0, 100)}`);
+        }
       }
     } catch (error) {
       console.error('Ошибка при обновлении профиля:', error);

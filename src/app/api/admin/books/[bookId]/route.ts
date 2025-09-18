@@ -12,7 +12,7 @@ function mapToAdminBook(b: any) {
     language: b.language ?? "Russian",
     pageCount: Number(b.pageCount ?? 0),
     price: Number(b.price ?? 0),
-    coverImageUrl: b.imageUrl ?? b.coverImageUrl ?? "",
+    imageUrl: b.imageUrl ?? b.coverImageUrl ?? "",
     isAvailable: b.isAvailable ?? true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -50,7 +50,7 @@ export async function PUT(
     set("Genre", body.genre);
     set("Publishing", body.publishedYear);
     set("Created", body.publishedYear);
-    set("ImageUrl", body.coverImageUrl ?? "https://via.placeholder.com/300x450?text=LeafSide");
+    set("ImageUrl", body.imageUrl ?? body.coverImageUrl ?? "https://via.placeholder.com/300x450?text=LeafSide");
     form.set("Price", toPrice(body.price));
     set("Isbn", body.isbn);
     set("Language", body.language);
