@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CreateBookRequest, BOOK_GENRES, BOOK_LANGUAGES } from "../../../types/book";
 
 interface AddBookModalProps {
@@ -16,7 +16,7 @@ export default function AddBookModal({
   onClose, 
   onSubmit, 
   creating, 
-  errors 
+  errors
 }: AddBookModalProps) {
   const [formData, setFormData] = useState<CreateBookRequest>({
     title: '',
@@ -32,6 +32,22 @@ export default function AddBookModal({
     isAvailable: true
   });
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      author: '',
+      isbn: '',
+      genre: 'Fiction',
+      language: 'Russian',
+      publishedYear: new Date().getFullYear(),
+      pageCount: 0,
+      price: 0,
+      description: '',
+      imageUrl: '',
+      isAvailable: true
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -45,6 +61,13 @@ export default function AddBookModal({
               type === 'number' ? Number(value) : value
     }));
   };
+
+  // Сброс формы при открытии модального окна
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
