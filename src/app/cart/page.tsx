@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Book } from "../../types/book";
 import { fetchJson } from "../../lib/api";
 import Link from "next/link";
+import OrderConfirmationModal from "../components/OrderConfirmationModal";
 
 export default function CartPage() {
   const { state, add, remove, clear, count, loading: cartLoading, error: cartError } = useCart();
@@ -13,6 +14,7 @@ export default function CartPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
 
   // Загружаем данные книг для отображения в корзине
   useEffect(() => {
@@ -257,7 +259,10 @@ export default function CartPage() {
               </div>
 
               {isAuthenticated ? (
-                <button className="w-full bg-[var(--accent)] text-white py-3 px-4 rounded-lg hover:bg-[var(--accent)]/80 transition-colors font-medium">
+                <button 
+                  onClick={() => setShowOrderModal(true)}
+                  className="w-full bg-[var(--accent)] text-white py-3 px-4 rounded-lg hover:bg-[var(--accent)]/80 transition-colors font-medium"
+                >
                   Оформить заказ
                 </button>
               ) : (
@@ -282,6 +287,18 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      {/* Модальное окно подтверждения заказа */}
+      <OrderConfirmationModal
+        isOpen={showOrderModal}
+        onClose={() => setShowOrderModal(false)}
+        onSuccess={() => {
+          // Можно добавить дополнительную логику после успешного оформления
+          console.log('Заказ успешно оформлен!');
+        }}
+        totalAmount={getTotalPrice()}
+        totalItems={getTotalItems()}
+      />
     </div>
   );
 }

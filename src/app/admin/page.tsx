@@ -682,7 +682,10 @@ export default function AdminPage() {
     try {
       setUpdatingOrderStatus(orderId);
       
-      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+      console.log('Admin: Updating order status:', orderId, 'to:', status);
+      console.log('Admin: Token:', token?.substring(0, 20) + '...');
+      
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -691,9 +694,20 @@ export default function AdminPage() {
         body: JSON.stringify({ status }),
       });
 
+      console.log('Admin: Response status:', response.status, response.statusText);
+      console.log('Admin: Response content-type:', response.headers.get('content-type'));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при обновлении статуса заказа');
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          console.error('Admin: Error data (JSON):', errorData);
+          throw new Error(errorData.error || 'Ошибка при обновлении статуса заказа');
+        } else {
+          const text = await response.text();
+          console.error('Admin: Error data (not JSON):', text.substring(0, 200));
+          throw new Error(`Ошибка сервера: ${text.substring(0, 100)}`);
+        }
       }
 
       setOrders(prevOrders => 

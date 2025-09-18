@@ -3,6 +3,7 @@
 import { useAuth } from "../auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import OrdersList from "../components/OrdersList";
 
 export default function ProfilePage() {
   const { isAuthenticated, userInfo, logout, isAdmin, isLoading, token, refreshToken, checkAndRefreshToken } = useAuth();
@@ -770,21 +771,7 @@ export default function ProfilePage() {
 
             {activeTab === "orders" && (
               <div className="card p-6">
-                <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
-                  <span className="text-2xl">📦</span>
-                  История заказов
-                </h2>
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">📦</div>
-                  <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">Заказов пока нет</h3>
-                  <p className="text-[var(--muted)] mb-6">Когда вы сделаете первый заказ, он появится здесь</p>
-                  <button 
-                    onClick={() => router.push('/')}
-                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
-                  >
-                    Перейти к покупкам
-                  </button>
-                </div>
+                <OrdersList />
               </div>
             )}
 
