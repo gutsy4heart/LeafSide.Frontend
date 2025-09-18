@@ -747,35 +747,39 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
+    <div className="min-h-screen bg-[var(--background)]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Toast toasts={toasts} />
         
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">
-              Панель администратора
-            </h1>
-            <p className="text-[var(--muted)]">
-              Добро пожаловать, {userInfo?.name || 'Администратор'}
-            </p>
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--foreground)] mb-2">
+                Панель администратора
+              </h1>
+              <p className="text-[var(--muted)] text-sm sm:text-base">
+                Добро пожаловать, {userInfo?.name || 'Администратор'}
+              </p>
+            </div>
+            
+            <div className="flex-shrink-0">
+              <ActionButtons
+                activeTab={activeTab}
+                loading={loading}
+                booksLoading={booksLoading}
+                ordersLoading={ordersLoading}
+                cartsLoading={cartsLoading}
+                onRefresh={handleRefresh}
+                onAddUser={() => setShowAddUserForm(true)}
+                onAddBook={() => setShowAddBookForm(true)}
+                onCheckBackend={handleCheckBackend}
+              />
+            </div>
           </div>
-          
-          <ActionButtons
-            activeTab={activeTab}
-            loading={loading}
-            booksLoading={booksLoading}
-            ordersLoading={ordersLoading}
-            cartsLoading={cartsLoading}
-            onRefresh={handleRefresh}
-            onAddUser={() => setShowAddUserForm(true)}
-            onAddBook={() => setShowAddBookForm(true)}
-            onCheckBackend={handleCheckBackend}
-          />
         </div>
-      </div>
 
-      <TabNavigation
+        <TabNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         usersCount={users.length}
@@ -887,6 +891,7 @@ export default function AdminPage() {
         itemName={bookDeleteDialog.book?.title}
         deleting={deletingBook}
       />
+      </div>
     </div>
   );
 }
