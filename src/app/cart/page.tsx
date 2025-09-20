@@ -2,6 +2,7 @@
 
 import { useCart } from "../cart-context";
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
 import { useEffect, useState } from "react";
 import { Book } from "../../types/book";
 import { fetchJson } from "../../lib/api";
@@ -11,6 +12,7 @@ import OrderConfirmationModal from "../components/OrderConfirmationModal";
 export default function CartPage() {
   const { state, add, remove, clear, count, loading: cartLoading, error: cartError } = useCart();
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslations();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function CartPage() {
         
         setBooks(cartBooks);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Ошибка загрузки книг");
+        setError(err instanceof Error ? err.message : t('cart.error'));
       } finally {
         setLoading(false);
       }
@@ -74,7 +76,7 @@ export default function CartPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Загрузка корзины...</p>
+          <p>{t('cart.loading')}</p>
         </div>
       </div>
     );
@@ -89,13 +91,13 @@ export default function CartPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold mb-2">Ошибка загрузки</h2>
+          <h2 className="text-xl font-semibold mb-2">{t('cart.error')}</h2>
           <p className="text-gray-600 mb-4">{error || cartError}</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            Попробовать снова
+            {t('cart.retry')}
           </button>
         </div>
       </div>
@@ -111,8 +113,8 @@ export default function CartPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m-2.4 0L3 3H1m6 16a2 2 0 104 0 2 2 0 00-4 0m8 0a2 2 0 104 0 2 2 0 00-4 0" />
             </svg>
           </div>
-          <h2 className="text-2xl font-semibold mb-2">Корзина пуста</h2>
-          <p className="text-gray-600 mb-6">Добавьте книги из каталога, чтобы они появились здесь</p>
+          <h2 className="text-2xl font-semibold mb-2">{t('cart.emptyTitle')}</h2>
+          <p className="text-gray-600 mb-6">{t('cart.emptyDescription')}</p>
           <Link 
             href="/"
             className="inline-flex items-center px-6 py-3 bg-[var(--accent)] text-white rounded-lg hover:bg-[var(--accent)]/80 transition-colors"
@@ -120,7 +122,7 @@ export default function CartPage() {
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            Перейти к каталогу
+            {t('cart.goToCatalog')}
           </Link>
         </div>
       </div>
@@ -131,9 +133,9 @@ export default function CartPage() {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">Корзина</h1>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('cart.title')}</h1>
           <div className="text-sm text-[var(--muted)]">
-            {getTotalItems()} {getTotalItems() === 1 ? 'товар' : 'товаров'} на сумму €{getTotalPrice().toFixed(2)}
+            {getTotalItems()} {getTotalItems() === 1 ? t('cart.items') : t('cart.itemsPlural')} на сумму €{getTotalPrice().toFixed(2)}
           </div>
         </div>
 

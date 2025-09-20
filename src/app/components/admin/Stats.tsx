@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "../../../lib/translations";
+
 interface Stats {
   totalUsers: number;
   adminUsers: number;
@@ -16,13 +18,14 @@ interface StatsProps {
 }
 
 export default function Stats({ activeTab, stats, booksCount, ordersCount, cartsCount }: StatsProps) {
+  const { t } = useTranslations();
   if (activeTab === 'users') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium">Всего пользователей</p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium">{t('admin.stats.totalUsers')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{stats.totalUsers}</p>
             </div>
             <div className="bg-blue-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -36,7 +39,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-xs sm:text-sm font-medium">Обычные пользователи</p>
+              <p className="text-green-100 text-xs sm:text-sm font-medium">{t('admin.stats.regularUsers')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{stats.regularUsers}</p>
             </div>
             <div className="bg-green-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -50,7 +53,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-purple-100 text-xs sm:text-sm font-medium">Администраторы</p>
+              <p className="text-purple-100 text-xs sm:text-sm font-medium">{t('admin.stats.adminUsers')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{stats.adminUsers}</p>
             </div>
             <div className="bg-purple-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -64,7 +67,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-orange-100 text-xs sm:text-sm font-medium">Новые за неделю</p>
+              <p className="text-orange-100 text-xs sm:text-sm font-medium">{t('admin.stats.recentUsers')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{stats.recentUsers}</p>
             </div>
             <div className="bg-orange-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -84,7 +87,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium">Всего книг</p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium">{t('admin.stats.totalBooks')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{booksCount}</p>
             </div>
             <div className="bg-blue-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -104,7 +107,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium">Всего заказов</p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium">{t('admin.stats.totalOrders')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{ordersCount}</p>
             </div>
             <div className="bg-blue-400 bg-opacity-30 rounded-full p-2 sm:p-3">
@@ -124,7 +127,7 @@ export default function Stats({ activeTab, stats, booksCount, ordersCount, carts
         <div className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent)]/80 rounded-lg p-4 sm:p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium">Активные корзины</p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium">{t('admin.stats.activeCarts')}</p>
               <p className="text-2xl sm:text-3xl font-bold">{cartsCount}</p>
             </div>
             <div className="bg-blue-400 bg-opacity-30 rounded-full p-2 sm:p-3">

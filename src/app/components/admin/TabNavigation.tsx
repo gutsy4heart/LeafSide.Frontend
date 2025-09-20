@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "../../../lib/translations";
+
 interface TabNavigationProps {
   activeTab: 'users' | 'books' | 'orders' | 'carts';
   setActiveTab: (tab: 'users' | 'books' | 'orders' | 'carts') => void;
@@ -17,10 +19,12 @@ export default function TabNavigation({
   ordersCount, 
   cartsCount 
 }: TabNavigationProps) {
+  const { t } = useTranslations();
+  
   const tabs = [
     {
       id: 'users' as const,
-      label: 'Пользователи',
+      label: t('admin.users'),
       count: usersCount,
       icon: (
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,7 +34,7 @@ export default function TabNavigation({
     },
     {
       id: 'books' as const,
-      label: 'Книги',
+      label: t('admin.books'),
       count: booksCount,
       icon: (
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -40,7 +44,7 @@ export default function TabNavigation({
     },
     {
       id: 'orders' as const,
-      label: 'Заказы',
+      label: t('admin.orders'),
       count: ordersCount,
       icon: (
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +54,7 @@ export default function TabNavigation({
     },
     {
       id: 'carts' as const,
-      label: 'Корзины',
+      label: t('admin.carts'),
       count: cartsCount,
       icon: (
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

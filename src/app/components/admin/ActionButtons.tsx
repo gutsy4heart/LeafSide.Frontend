@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "../../../lib/translations";
+
 interface ActionButtonsProps {
   activeTab: 'users' | 'books' | 'orders' | 'carts';
   loading: boolean;
@@ -23,6 +25,7 @@ export default function ActionButtons({
   onAddBook,
   onCheckBackend
 }: ActionButtonsProps) {
+  const { t } = useTranslations();
   const isLoading = loading || booksLoading || ordersLoading || cartsLoading;
 
   return (
@@ -36,8 +39,8 @@ export default function ActionButtons({
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span className="hidden sm:inline">Проверить бэкенд</span>
-          <span className="sm:hidden">Бэкенд</span>
+          <span className="hidden sm:inline">{t('admin.checkBackend')}</span>
+          <span className="sm:hidden">{t('admin.backend')}</span>
         </button>
         
         <button
@@ -48,7 +51,7 @@ export default function ActionButtons({
           <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          {isLoading ? 'Загрузка...' : 'Обновить'}
+          {isLoading ? t('common.loading') : t('common.refresh')}
         </button>
       </div>
       
@@ -62,8 +65,8 @@ export default function ActionButtons({
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span className="hidden sm:inline">Добавить пользователя</span>
-            <span className="sm:hidden">Добавить</span>
+            <span className="hidden sm:inline">{t('admin.addUser')}</span>
+            <span className="sm:hidden">{t('common.add')}</span>
           </button>
         )}
         
@@ -75,8 +78,8 @@ export default function ActionButtons({
             <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            <span className="hidden sm:inline">Добавить книгу</span>
-            <span className="sm:hidden">Добавить</span>
+            <span className="hidden sm:inline">{t('admin.addBook')}</span>
+            <span className="sm:hidden">{t('common.add')}</span>
           </button>
         )}
       </div>

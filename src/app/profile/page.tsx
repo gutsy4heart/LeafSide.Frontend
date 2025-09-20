@@ -1,12 +1,14 @@
 "use client";
 
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import OrdersList from "../components/OrdersList";
 
 export default function ProfilePage() {
   const { isAuthenticated, userInfo, logout, isAdmin, isLoading, token, refreshToken, checkAndRefreshToken } = useAuth();
+  const { t } = useTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
@@ -398,10 +400,10 @@ export default function ProfilePage() {
   };
 
   const tabs = [
-    { id: "profile", label: "Профиль", icon: "👤" },
-    { id: "orders", label: "Заказы", icon: "📦" },
-    // { id: "favorites", label: "Избранное", icon: "❤️" },
-    { id: "settings", label: "Настройки", icon: "⚙️" }
+    { id: "profile", label: t('profile.title'), icon: "👤" },
+    { id: "orders", label: t('profile.orders'), icon: "📦" },
+    // { id: "favorites", label: t('profile.favorites'), icon: "❤️" },
+    { id: "settings", label: t('profile.settings'), icon: "⚙️" }
   ];
 
   if (isLoading) {
@@ -409,8 +411,8 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold text-white mb-4">Загрузка профиля...</h1>
-          <p className="text-gray-300">Получаем данные с сервера</p>
+          <h1 className="text-2xl font-bold text-white mb-4">{t('profile.loadingProfile')}</h1>
+          <p className="text-gray-300">{t('profile.gettingData')}</p>
         </div>
       </div>
     );
@@ -431,9 +433,9 @@ export default function ProfilePage() {
             </svg>
           </div>
           <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Мой профиль
+            {t('profile.myProfile')}
           </h1>
-          <p className="text-slate-300 text-lg">Добро пожаловать в ваш личный кабинет</p>
+          <p className="text-slate-300 text-lg">{t('profile.welcomeMessage')}</p>
         </div>
 
         <div className="grid gap-8 grid-cols-1 lg:grid-cols-4">
@@ -454,18 +456,18 @@ export default function ProfilePage() {
               <h3 className="font-bold text-[var(--foreground)] text-lg">
                 {profileData.firstName && profileData.lastName 
                   ? `${profileData.firstName} ${profileData.lastName}` 
-                  : userInfo?.name || "Пользователь"}
+                  : userInfo?.name || t('profile.user')}
               </h3>
               <p className="text-sm text-[var(--muted)] mb-2">{userInfo?.email}</p>
               <div className="flex items-center justify-center gap-2">
                 {isAdmin && (
                   <span className="px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                    Администратор
+                    {t('profile.administrator')}
                   </span>
                 )}
                 {!isAdmin && (
                   <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded-full">
-                    Пользователь
+                    {t('profile.user')}
                   </span>
                 )}
               </div>
@@ -473,7 +475,7 @@ export default function ProfilePage() {
 
             {/* Навигация */}
             <div className="card p-4">
-              <h3 className="font-semibold text-[var(--foreground)] mb-4">Навигация</h3>
+              <h3 className="font-semibold text-[var(--foreground)] mb-4">{t('profile.navigation')}</h3>
               <div className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -494,7 +496,7 @@ export default function ProfilePage() {
 
             {/* Быстрые действия */}
             <div className="card p-4 mt-6">
-              <h3 className="font-semibold text-[var(--foreground)] mb-4">Быстрые действия</h3>
+              <h3 className="font-semibold text-[var(--foreground)] mb-4">{t('profile.quickActions')}</h3>
               <div className="space-y-2">
                 <button 
                   onClick={() => router.push('/cart')}
@@ -503,7 +505,7 @@ export default function ProfilePage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
                   </svg>
-                  Корзина
+                  {t('profile.cart')}
                   {stats.itemsInCart > 0 && (
                     <span className="ml-auto px-2 py-1 bg-blue-500 text-white text-xs rounded-full">
                       {stats.itemsInCart}
@@ -534,7 +536,7 @@ export default function ProfilePage() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    Админ панель
+                    {t('profile.adminPanel')}
                   </button>
                 )}
                 
@@ -545,7 +547,7 @@ export default function ProfilePage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  Выйти
+                  {t('profile.logout')}
                 </button>
               </div>
             </div>
@@ -560,7 +562,7 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-3">
                       <span className="text-2xl">👤</span>
-                      Личная информация
+                      {t('profile.personalInfo')}
                     </h2>
                     <button
                       onClick={() => setIsEditing(!isEditing)}
@@ -569,14 +571,14 @@ export default function ProfilePage() {
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      {isEditing ? "Отменить" : "Редактировать"}
+                      {isEditing ? t('profile.cancel') : t('profile.edit')}
                     </button>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Имя
+                            {t('profile.firstName')}
                           </label>
                           {isEditing ? (
                             <input 
@@ -587,14 +589,14 @@ export default function ProfilePage() {
                             />
                           ) : (
                             <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                              {profileLoading ? "Загрузка..." : (profileData.firstName || "Не указано")}
+                              {profileLoading ? t('profile.loading') : (profileData.firstName || t('profile.notSpecified'))}
                             </div>
                           )}
                         </div>
                     
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Фамилия
+                            {t('profile.lastName')}
                           </label>
                           {isEditing ? (
                             <input 
@@ -605,23 +607,23 @@ export default function ProfilePage() {
                             />
                           ) : (
                             <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                              {profileLoading ? "Загрузка..." : (profileData.lastName || "Не указано")}
+                              {profileLoading ? t('profile.loading') : (profileData.lastName || t('profile.notSpecified'))}
                             </div>
                           )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Email
+                            {t('profile.email')}
                           </label>
                           <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                            {profileLoading ? "Загрузка..." : (userInfo?.email || "Не указано")}
+                            {profileLoading ? t('profile.loading') : (userInfo?.email || t('profile.notSpecified'))}
                           </div>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Номер телефона
+                            {t('profile.phoneNumber')}
                           </label>
                           {isEditing ? (
                             <div className="flex">
@@ -646,14 +648,14 @@ export default function ProfilePage() {
                             </div>
                           ) : (
                             <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                              {profileLoading ? "Загрузка..." : (profileData.phoneNumber ? `${profileData.countryCode} ${profileData.phoneNumber}` : "Не указано")}
+                              {profileLoading ? t('profile.loading') : (profileData.phoneNumber ? `${profileData.countryCode} ${profileData.phoneNumber}` : t('profile.notSpecified'))}
                             </div>
                           )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Пол
+                            {t('profile.gender')}
                           </label>
                           {isEditing ? (
                             <select
@@ -661,25 +663,25 @@ export default function ProfilePage() {
                               onChange={(e) => setProfileData({...profileData, gender: e.target.value})}
                               className="w-full px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                              <option value="Male">Мужской</option>
-                              <option value="Female">Женский</option>
-                              <option value="Other">Другой</option>
+                              <option value="Male">{t('profile.male')}</option>
+                              <option value="Female">{t('profile.female')}</option>
+                              <option value="Other">{t('profile.other')}</option>
                             </select>
                           ) : (
                             <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                              {profileLoading ? "Загрузка..." : (profileData.gender === "Male" ? "Мужской" : 
-                               profileData.gender === "Female" ? "Женский" : 
-                               profileData.gender === "Other" ? "Другой" : "Не указано")}
+                              {profileLoading ? t('profile.loading') : (profileData.gender === 'Male' ? t('profile.male') : 
+                               profileData.gender === 'Female' ? t('profile.female') : 
+                               profileData.gender === 'Other' ? t('profile.other') : t('profile.notSpecified'))}
                             </div>
                           )}
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-                            Дата регистрации
+                            {t('profile.registrationDate')}
                           </label>
                           <div className="px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)]">
-                            {profileLoading ? "Загрузка..." : (userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('ru-RU') : "Неизвестно")}
+                            {profileLoading ? t('profile.loading') : (userInfo?.createdAt ? new Date(userInfo.createdAt).toLocaleDateString('ru-RU') : t('profile.notSpecified'))}
                           </div>
                         </div>
                   </div>
@@ -691,7 +693,7 @@ export default function ProfilePage() {
                         disabled={updating}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
                       >
-                        Отмена
+                        {t('profile.cancel')}
                       </button>
                       <button
                         onClick={updateProfile}
@@ -701,7 +703,7 @@ export default function ProfilePage() {
                         {updating && (
                           <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
                         )}
-                        {updating ? 'Сохранение...' : 'Сохранить изменения'}
+                        {updating ? t('profile.saving') : t('profile.saveChanges')}
                       </button>
                     </div>
                   )}
@@ -712,7 +714,7 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-3">
                       <span className="text-2xl">📊</span>
-                      Статистика
+                      {t('profile.statistics')}
                     </h2>
                     <button
                       onClick={fetchUserStats}
@@ -722,7 +724,7 @@ export default function ProfilePage() {
                       <svg className={`w-4 h-4 ${statsLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      {statsLoading ? 'Обновление...' : 'Обновить'}
+                      {statsLoading ? t('profile.refreshing') : t('profile.refresh')}
                     </button>
                   </div>
                   
@@ -735,7 +737,7 @@ export default function ProfilePage() {
                           stats.totalOrders
                         )}
                       </div>
-                      <div className="text-sm text-[var(--muted)]">Заказов</div>
+                      <div className="text-sm text-[var(--muted)]">{t('profile.ordersCount')}</div>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-xl border border-green-500/30">
                       <div className="text-3xl font-bold text-green-400 mb-2">
@@ -745,7 +747,7 @@ export default function ProfilePage() {
                           stats.totalBooksPurchased
                         )}
                       </div>
-                      <div className="text-sm text-[var(--muted)]">Куплено книг</div>
+                      <div className="text-sm text-[var(--muted)]">{t('profile.booksPurchased')}</div>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl border border-purple-500/30">
                       <div className="text-3xl font-bold text-purple-400 mb-2">
@@ -755,7 +757,7 @@ export default function ProfilePage() {
                           stats.itemsInCart
                         )}
                       </div>
-                      <div className="text-sm text-[var(--muted)]">В корзине</div>
+                      <div className="text-sm text-[var(--muted)]">{t('profile.inCart')}</div>
                     </div>
                     {/* <div className="text-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-xl border border-orange-500/30">
                       <div className="text-3xl font-bold text-orange-400 mb-2">
@@ -772,13 +774,13 @@ export default function ProfilePage() {
                   {!statsLoading && stats.totalOrders === 0 && stats.totalBooksPurchased === 0 && stats.itemsInCart === 0 && stats.favoritesCount === 0 && (
                     <div className="text-center py-4">
                       <p className="text-[var(--muted)] text-sm">
-                        Статистика пока недоступна. Данные появятся после совершения покупок.
+                        {t('profile.statsUnavailable')}
                       </p>
                       <button
                         onClick={fetchUserStats}
                         className="mt-2 px-3 py-1 text-xs bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-colors"
                       >
-                        Попробовать снова
+                        {t('profile.tryAgain')}
                       </button>
                     </div>
                   )}
@@ -796,17 +798,17 @@ export default function ProfilePage() {
               <div className="card p-6">
                 <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
                   <span className="text-2xl">❤️</span>
-                  Избранное
+                  {t('profile.favorites')}
                 </h2>
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">❤️</div>
-                  <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">Избранных книг нет</h3>
-                  <p className="text-[var(--muted)] mb-6">Добавьте книги в избранное, чтобы они появились здесь</p>
+                  <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">{t('profile.noFavorites')}</h3>
+                  <p className="text-[var(--muted)] mb-6">{t('profile.addFavorites')}</p>
                   <button 
                     onClick={() => router.push('/')}
                     className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                   >
-                    Найти книги
+                    {t('profile.findBooks')}
                   </button>
                 </div>
               </div>
@@ -816,33 +818,33 @@ export default function ProfilePage() {
               <div className="card p-6">
                 <h2 className="text-2xl font-bold text-[var(--foreground)] mb-6 flex items-center gap-3">
                   <span className="text-2xl">⚙️</span>
-                  Настройки
+                  {t('profile.settings')}
                 </h2>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Уведомления</h3>
+                    <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">{t('profile.notifications')}</h3>
                     <div className="space-y-3">
                       <label className="flex items-center gap-3">
                         <input disabled type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" />
-                        <span className="text-[var(--foreground)]">Email уведомления (в разработке)</span>
+                        <span className="text-[var(--foreground)]">{t('profile.emailNotifications')}</span>
                       </label>
                       <label className="flex items-center gap-3">
                         <input disabled type="checkbox" className="w-4 h-4 text-blue-600 bg-[var(--card)] border-white/20 rounded focus:ring-blue-500" />
-                        <span className="text-[var(--foreground)]">SMS уведомления (в разработке)</span>
+                        <span className="text-[var(--foreground)]">{t('profile.smsNotifications')}</span>
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">Безопасность</h3>
+                    <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">{t('profile.security')}</h3>
                     <div className="space-y-3">
                       <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors" disabled>
-                        <div className="font-medium text-[var(--foreground)]">Изменить пароль(в разработке)</div>
-                        <div className="text-sm text-[var(--muted)]">Обновите пароль для безопасности</div>
+                        <div className="font-medium text-[var(--foreground)]">{t('profile.changePassword')}</div>
+                        <div className="text-sm text-[var(--muted)]">{t('profile.passwordDescription')}</div>
                       </button>
                       <button className="w-full text-left px-4 py-3 bg-[var(--card)] border border-white/10 rounded-lg hover:bg-[var(--card)]/80 transition-colors" disabled>
-                        <div className="font-medium text-[var(--foreground)]">Двухфакторная аутентификация (в разработке)</div>
-                        <div className="text-sm text-[var(--muted)]">Дополнительная защита аккаунта</div>
+                        <div className="font-medium text-[var(--foreground)]">{t('profile.twoFactorAuth')}</div>
+                        <div className="text-sm text-[var(--muted)]">{t('profile.twoFactorDescription')}</div>
                       </button>
                     </div>
                   </div>

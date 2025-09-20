@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./cart-context";
 import { AuthProvider } from "./auth-context";
+import { LanguageProvider } from "./language-context";
 import CartNav from "./CartNav";
+import Footer from "./components/Footer";
 import Link from "next/link";
 
 const geistSans = Geist({
@@ -29,6 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <LanguageProvider>
         <AuthProvider>
         <CartProvider>
         <div className="relative overflow-x-hidden">
@@ -60,18 +63,11 @@ export default function RootLayout({
             {children}
           </main>
 
-          <footer className="mt-8 border-t border-white/10">
-            <div className="container py-6 text-sm text-[var(--muted)] flex items-center justify-between">
-              <span>© {new Date().getFullYear()} LeafSide</span>
-              <div className="flex items-center gap-4">
-                <a href="#" className="hover:text-[var(--foreground)]">Политика</a>
-                <a href="#" className="hover:text-[var(--foreground)]">Условия</a>
-              </div>
-            </div>
-          </footer>
+          <Footer />
         </div>
         </CartProvider>
         </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -1,29 +1,70 @@
+"use client";
+
 import type { Book } from "@/types/book";
 import { fetchJson } from "@/lib/api";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
 import Link from "next/link";
+import { useTranslations } from "../../../lib/translations";
+import { useEffect, useState } from "react";
 
 type Props = { params: Promise<{ id: string }> };
 
-export default async function BookDetails({ params }: Props) {
-  const { id } = await params;
-  let book: Book;
-  try {
-    book = await fetchJson<Book>(`/api/books/${id}`);
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    if (msg.includes(" 404")) {
-      notFound();
-    }
-    throw e;
+export default function BookDetails({ params }: Props) {
+  const { t } = useTranslations();
+  const [book, setBook] = useState<Book | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        const { id } = await params;
+        const bookData = await fetchJson<Book>(`/api/books/${id}`);
+        setBook(bookData);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (msg.includes(" 404")) {
+          notFound();
+        }
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBook();
+  }, [params]);
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-[var(--muted)]">{t('common.loading')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !book) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-4">{t('book.error')}</h1>
+          <p className="text-[var(--muted)]">{error || t('book.notFound')}</p>
+        </div>
+      </div>
+    );
   }
   
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-6">
         <Link href="/" className="inline-flex items-center text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
-          ← Назад к каталогу
+          ← {t('book.backToCatalog')}
         </Link>
       </div>
       
@@ -39,7 +80,7 @@ export default async function BookDetails({ params }: Props) {
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                <span className="text-gray-400 text-lg">Изображение недоступно</span>
+                <span className="text-gray-400 text-lg">{t('book.imageNotAvailable')}</span>
               </div>
             )}
           </div>
@@ -51,16 +92,16 @@ export default async function BookDetails({ params }: Props) {
               {book.title}
             </h1>
             <p className="text-lg text-[var(--muted)] mb-1">
-              Автор: <span className="font-medium">{book.author}</span>
+              {t('book.author')}: <span className="font-medium">{book.author}</span>
             </p>
             {book.genre && (
               <p className="text-sm text-[var(--muted)]">
-                Жанр: <span className="font-medium">{book.genre}</span>
+                {t('book.genre')}: <span className="font-medium">{book.genre}</span>
               </p>
             )}
             {book.publishing && (
               <p className="text-sm text-[var(--muted)]">
-                Издательство: <span className="font-medium">{book.publishing}</span>
+                {t('book.publisher')}: <span className="font-medium">{book.publishing}</span>
               </p>
             )}
           </div>
@@ -72,16 +113,16 @@ export default async function BookDetails({ params }: Props) {
               </p>
               {!book.isAvailable && (
                 <p className="text-sm text-red-500 font-medium mt-2">
-                  ⚠️ Книга временно недоступна
+                  ⚠️ {t('book.temporarilyUnavailable')}
                 </p>
               )}
             </div>
           )}
           
           <div>
-            <h2 className="text-xl font-semibold mb-3">Описание</h2>
+            <h2 className="text-xl font-semibold mb-3">{t('book.description')}</h2>
             <p className="text-base leading-relaxed text-[var(--muted)]">
-              {book.description || "Описание книги пока недоступно."}
+              {book.description || t('book.descriptionNotAvailable')}
             </p>
           </div>
           

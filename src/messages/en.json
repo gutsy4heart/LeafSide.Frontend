@@ -1,0 +1,390 @@
+{
+  "navigation": {
+    "catalog": "Catalog",
+    "about": "About",
+    "contacts": "Contacts",
+    "cart": "Cart",
+    "login": "Login",
+    "profile": "Profile",
+    "orders": "Orders",
+    "admin": "Admin",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Find your next book",
+    "subtitle": "A carefully curated catalog of publications: from fiction to non-fiction.",
+    "viewCatalog": "View catalog",
+    "learnMore": "Learn more"
+  },
+  "book": {
+    "addToCart": "Add to cart",
+    "price": "Price",
+    "author": "Author",
+    "description": "Description",
+    "pages": "pages",
+    "year": "year",
+    "unavailable": "Unavailable",
+    "noImage": "No image",
+    "clickForDetails": "Click for details",
+    "adding": "Adding",
+    "backToCatalog": "Back to catalog",
+    "imageNotAvailable": "Image not available",
+    "genre": "Genre",
+    "publisher": "Publisher",
+    "temporarilyUnavailable": "Book temporarily unavailable",
+    "descriptionNotAvailable": "Book description not available yet.",
+    "error": "Loading error",
+    "notFound": "Book not found"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Your cart is empty",
+    "total": "Total",
+    "checkout": "Checkout",
+    "remove": "Remove",
+    "quantity": "Quantity",
+    "loading": "Loading cart...",
+    "error": "Loading error",
+    "retry": "Try again",
+    "emptyTitle": "Cart is empty",
+    "emptyDescription": "Add books from the catalog to see them here",
+    "goToCatalog": "Go to catalog",
+    "items": "item",
+    "itemsPlural": "items",
+    "totalItems": "Items",
+    "shipping": "Shipping",
+    "free": "Free",
+    "totalAmount": "Total amount",
+    "perItem": "per item",
+    "clearCart": "Clear cart",
+    "loginRequired": "You need to log in to place an order",
+    "securePayment": "Secure payment",
+    "fastDelivery": "Fast delivery",
+    "author": "Author",
+    "year": "year",
+    "pages": "pages",
+    "language": "language"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "phone": "Phone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "postalCode": "Postal code",
+    "loginButton": "Login",
+    "registerButton": "Register",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginTitle": "Sign in to your account",
+    "registerTitle": "Create an account",
+    "welcome": "Welcome!",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "loginError": "Login error",
+    "serverUnavailable": "Server unavailable",
+    "checkConnection": "Check server connection",
+    "checkingConnection": "Checking connection...",
+    "loginInProgress": "Signing in...",
+    "noToken": "Authorization token not received",
+    "loginErrorDetails": "An error occurred during login. Check your data and try again."
+  },
+  "profile": {
+    "title": "Profile",
+    "personalInfo": "Personal information",
+    "updateProfile": "Update profile",
+    "orders": "My orders",
+    "orderHistory": "Order history",
+    "myProfile": "My Profile",
+    "welcomeMessage": "Welcome to your personal account",
+    "loadingProfile": "Loading profile...",
+    "gettingData": "Getting data from server",
+    "navigation": "Navigation",
+    "quickActions": "Quick actions",
+    "cart": "Cart",
+    "adminPanel": "Admin panel",
+    "logout": "Logout",
+    "administrator": "Administrator",
+    "user": "User",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phoneNumber": "Phone number",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "registrationDate": "Registration date",
+    "notSpecified": "Not specified",
+    "loading": "Loading...",
+    "saveChanges": "Save changes",
+    "saving": "Saving...",
+    "statistics": "Statistics",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "ordersCount": "Orders",
+    "booksPurchased": "Books purchased",
+    "inCart": "In cart",
+    "favorites": "Favorites",
+    "noFavorites": "No favorite books",
+    "addFavorites": "Add books to favorites to see them here",
+    "findBooks": "Find books",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "emailNotifications": "Email notifications (in development)",
+    "smsNotifications": "SMS notifications (in development)",
+    "security": "Security",
+    "changePassword": "Change password (in development)",
+    "passwordDescription": "Update password for security",
+    "twoFactorAuth": "Two-factor authentication (in development)",
+    "twoFactorDescription": "Additional account protection",
+    "statsUnavailable": "Statistics are not available yet. Data will appear after making purchases.",
+    "tryAgain": "Try again"
+  },
+  "orders": {
+    "title": "Orders",
+    "orderNumber": "Order number",
+    "date": "Date",
+    "status": "Status",
+    "total": "Total",
+    "details": "Details",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "admin": {
+    "title": "Admin panel",
+    "welcome": "Welcome",
+    "admin": "Administrator",
+    "users": "Users",
+    "books": "Books",
+    "orders": "Orders",
+    "carts": "Carts",
+    "stats": "Statistics",
+    "addBook": "Add book",
+    "editBook": "Edit book",
+    "deleteBook": "Delete book",
+    "addUser": "Add user",
+    "editUser": "Edit user",
+    "deleteUser": "Delete user",
+    "role": "Role",
+    "user": "User",
+    "checkBackend": "Check backend",
+    "backend": "Backend",
+    "stats": {
+      "totalUsers": "Total users",
+      "regularUsers": "Regular users",
+      "adminUsers": "Administrators",
+      "recentUsers": "New this week",
+      "totalBooks": "Total books",
+      "totalOrders": "Total orders",
+      "activeCarts": "Active carts"
+    },
+    "modals": {
+      "addUser": {
+        "title": "Add new user",
+        "progress": "Form completion progress",
+        "personalInfo": "Personal information",
+        "contactInfo": "Contact information",
+        "security": "Security",
+        "email": "Email",
+        "emailPlaceholder": "example@email.com",
+        "password": "Password",
+        "passwordPlaceholder": "Minimum 6 characters",
+        "passwordRequirement": "Password must contain at least 6 characters",
+        "strong": "Strong",
+        "medium": "Medium",
+        "weak": "Weak",
+        "firstName": "First name",
+        "firstNamePlaceholder": "Enter first name",
+        "lastName": "Last name",
+        "lastNamePlaceholder": "Enter last name",
+        "phone": "Phone number",
+        "phonePlaceholder": "Phone number",
+        "selectedCountry": "Selected country code",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "other": "Other",
+        "create": "Create user",
+        "creating": "Creating..."
+      },
+      "addBook": {
+        "title": "Add new book",
+        "bookTitle": "Title",
+        "titlePlaceholder": "Book title",
+        "author": "Author",
+        "authorPlaceholder": "Book author",
+        "isbn": "ISBN",
+        "isbnPlaceholder": "ISBN",
+        "genre": "Genre",
+        "language": "Language",
+        "publishedYear": "Published year",
+        "pageCount": "Number of pages",
+        "price": "Price (€)",
+        "imageUrl": "Image URL",
+        "imageUrlPlaceholder": "Leave empty for default image",
+        "optional": "optional",
+        "available": "Available for order",
+        "description": "Description",
+        "descriptionPlaceholder": "Book description",
+        "create": "Create book",
+        "creating": "Creating..."
+      }
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "user": "User",
+    "accountActive": "Account active",
+    "refresh": "Refresh"
+  },
+  "footer": {
+    "copyright": "© {year} LeafSide",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "We create the best place to buy books online. Our mission is to make reading accessible and enjoyable for everyone.",
+    "mission": {
+      "title": "Our Mission",
+      "description": "LeafSide was born from a love of books and a desire to make quality literature accessible to everyone. We believe that every book can change a reader's life.",
+      "goal": "Our goal is to create a platform where everyone can find exactly the book they need, at an affordable price and with fast delivery.",
+      "values": "Our Values",
+      "quality": "Quality Literature",
+      "accessibility": "Accessibility for All",
+      "community": "Reader Community"
+    },
+    "features": {
+      "title": "Why Choose Us",
+      "curated": {
+        "title": "Curated Selection",
+        "description": "Every book in our catalog is carefully selected by our experts"
+      },
+      "fast": {
+        "title": "Fast Delivery",
+        "description": "We deliver books nationwide within 1-3 days"
+      },
+      "quality": {
+        "title": "Quality Service",
+        "description": "We care about every customer and provide the best shopping experience"
+      }
+    },
+    "team": {
+      "title": "Our Team",
+      "alex": {
+        "name": "Alexander Petrov",
+        "role": "Founder and CEO",
+        "description": "Passionate reader with 15 years of experience in the book industry"
+      },
+      "maria": {
+        "name": "Maria Ivanova",
+        "role": "Chief Editor",
+        "description": "Literary critic and curator of the book collection"
+      },
+      "dmitry": {
+        "name": "Dmitry Sidorov",
+        "role": "Technical Director",
+        "description": "Developer with experience in creating e-commerce platforms"
+      }
+    },
+    "stats": {
+      "title": "Our Achievements",
+      "books": "Books in catalog",
+      "customers": "Happy customers",
+      "authors": "Partner authors",
+      "satisfaction": "Customer satisfaction"
+    },
+    "cta": {
+      "title": "Join Our Community",
+      "description": "Discover the world of quality literature with LeafSide",
+      "explore": "Explore catalog",
+      "contact": "Contact us"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "We're always happy to hear from you. Contact us in any convenient way.",
+    "info": {
+      "title": "Get in Touch",
+      "description": "Our team is ready to answer your questions and help with book selection.",
+      "email": {
+        "title": "Email",
+        "address": "info@leafside.com",
+        "description": "We'll respond within 24 hours"
+      },
+      "phone": {
+        "title": "Phone",
+        "number": "+7 (800) 123-45-67",
+        "description": "Mon-Fri from 9:00 to 18:00"
+      },
+      "address": {
+        "title": "Address",
+        "street": "Book Street, 123, Moscow, 101000",
+        "description": "Office open for visits by appointment"
+      }
+    },
+    "social": {
+      "title": "Follow Us"
+    },
+    "form": {
+      "title": "Write to Us",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "subject": "Subject",
+      "subjectPlaceholder": "Choose a topic",
+      "subjects": {
+        "general": "General questions",
+        "order": "Order questions",
+        "technical": "Technical support",
+        "partnership": "Partnership"
+      },
+      "message": "Message",
+      "messagePlaceholder": "Describe your question or suggestion",
+      "send": "Send message",
+      "sending": "Sending...",
+      "success": "Message sent successfully! We'll contact you soon."
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "shipping": {
+        "question": "How long does delivery take?",
+        "answer": "Delivery to Moscow takes 1-2 days, to Russia - 3-7 days. Express delivery is available in major cities."
+      },
+      "returns": {
+        "question": "Can I return a book?",
+        "answer": "Yes, you can return a book within 14 days of receipt if it hasn't been damaged."
+      },
+      "payment": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept bank cards, electronic wallets, and cash on delivery."
+      },
+      "support": {
+        "question": "How can I get help?",
+        "answer": "Contact us through the feedback form, email, or phone. We'll respond within 24 hours."
+      }
+    }
+  }
+}

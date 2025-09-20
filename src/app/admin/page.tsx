@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { UserWithRole, UserRole, UpdateUserRoleRequest } from "../../types/user";
@@ -25,6 +26,7 @@ import DeleteConfirmModal from "../components/admin/DeleteConfirmModal";
 
 export default function AdminPage() {
   const { isAuthenticated, isAdmin, userInfo, token } = useAuth();
+  const { t } = useTranslations();
   const router = useRouter();
   const { toasts, showToast } = useToast();
 
@@ -44,7 +46,7 @@ export default function AdminPage() {
     firstName: '',
     lastName: '',
     phoneNumber: '',
-    address: '',
+    countryCode: 'PL',
     gender: 'Male'
   });
   const [creating, setCreating] = useState(false);
@@ -127,13 +129,16 @@ export default function AdminPage() {
     return errors;
   };
 
-  const validateNewUser = (u: { email: string; password: string; firstName: string; lastName: string; }) => {
+  const validateNewUser = (u: { email: string; password: string; firstName: string; lastName: string; phoneNumber: string; gender: string; }) => {
     const errors: Record<string, string> = {};
     if (!u.email || u.email.trim().length === 0) errors.email = 'Email обязателен';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u.email)) errors.email = 'Некорректный email';
     if (!u.password || u.password.length < 6) errors.password = 'Пароль должен содержать минимум 6 символов';
     if (!u.firstName || u.firstName.trim().length === 0) errors.firstName = 'Имя обязательно';
     if (!u.lastName || u.lastName.trim().length === 0) errors.lastName = 'Фамилия обязательна';
+    if (!u.phoneNumber || u.phoneNumber.trim().length === 0) errors.phoneNumber = 'Номер телефона обязателен';
+    else if (!/^\d{10,15}$/.test(u.phoneNumber.replace(/\D/g, ''))) errors.phoneNumber = 'Неверный формат номера';
+    if (!u.gender) errors.gender = 'Выберите пол';
     return errors;
   };
 
@@ -486,7 +491,7 @@ export default function AdminPage() {
         firstName: '',
         lastName: '',
         phoneNumber: '',
-        address: '',
+        countryCode: 'KZ',
         gender: 'Male'
       });
       showToast('Пользователь создан', 'success');
@@ -754,7 +759,7 @@ export default function AdminPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Загрузка данных...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -770,10 +775,10 @@ export default function AdminPage() {
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
             <div className="flex-1">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[var(--foreground)] mb-2">
-                Панель администратора
+                {t('admin.title')}
               </h1>
               <p className="text-[var(--muted)] text-sm sm:text-base">
-                Добро пожаловать, {userInfo?.name || 'Администратор'}
+                {t('admin.welcome')}, {userInfo?.name || t('admin.admin')}
               </p>
             </div>
             

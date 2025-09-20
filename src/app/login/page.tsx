@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
 
 export default function LoginPage() {
   const { setToken } = useAuth();
+  const { t } = useTranslations();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +33,7 @@ export default function LoginPage() {
       
       if (!res.ok) {
         const errorText = await res.text();
-        let errorMessage = "Ошибка входа";
+        let errorMessage = t('auth.loginError');
         let errorDetails = "";
         
         try {
@@ -45,7 +47,7 @@ export default function LoginPage() {
         
         // Специальная обработка для ошибки подключения к бэкенду
         if (res.status === 502) {
-          errorMessage = "Сервер недоступен";
+          errorMessage = t('auth.serverUnavailable');
           errorDetails = "Проверьте, что бэкенд запущен. Попробуйте запустить: cd LeafSide-backend && dotnet run --project LeafSide.API";
         }
         
@@ -56,7 +58,7 @@ export default function LoginPage() {
       const data = await res.json();
       
       if (!data.token) {
-        throw new Error("Не получен токен авторизации");
+        throw new Error(t('auth.noToken'));
       }
       
       // Сохраняем токен и перенаправляем на главную страницу
@@ -65,7 +67,7 @@ export default function LoginPage() {
       
     } catch (err: any) {
       console.error("Ошибка авторизации:", err);
-      setError(err?.message ?? "Произошла ошибка при входе. Проверьте данные и попробуйте снова.");
+      setError(err?.message ?? t('auth.loginErrorDetails'));
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,7 @@ export default function LoginPage() {
       });
       
       if (res.status === 502) {
-        setError("Сервер недоступен. Проверьте, что бэкенд запущен на порту 5233.");
+        setError(t('auth.serverUnavailable') + ". Проверьте, что бэкенд запущен на порту 5233.");
       } else {
         setError("Сервер отвечает, но есть проблемы с подключением.");
       }
@@ -103,20 +105,20 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">Добро пожаловать!</h1>
-          <p className="text-[var(--muted)]">Войдите в свой аккаунт</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-2">{t('auth.welcome')}</h1>
+          <p className="text-[var(--muted)]">{t('auth.loginTitle')}</p>
         </div>
         
         <form onSubmit={onSubmit} className="space-y-6 card p-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Email
+                {t('auth.email')}
               </label>
               <input 
                 id="email"
                 className="w-full rounded-md bg-[var(--card)] border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" 
-                placeholder="Введите ваш email" 
+                placeholder={t('auth.emailPlaceholder')} 
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -127,12 +129,12 @@ export default function LoginPage() {
             
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)] mb-2">
-                Пароль
+                {t('auth.password')}
               </label>
               <input 
                 id="password"
                 className="w-full rounded-md bg-[var(--card)] border border-white/10 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors" 
-                placeholder="Введите ваш пароль" 
+                placeholder={t('auth.passwordPlaceholder')} 
                 type="password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
@@ -175,14 +177,14 @@ export default function LoginPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Вход в систему...
+                {t('auth.loginInProgress')}
               </>
             ) : (
               <>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Войти
+                {t('auth.loginButton')}
               </>
             )}
           </button>
@@ -190,12 +192,12 @@ export default function LoginPage() {
           <div className="space-y-4">
             <div className="text-center">
               <p className="text-sm text-[var(--muted)]">
-                Нет аккаунта?{" "}
+                {t('auth.noAccount')}{" "}
                 <a 
                   className="text-blue-600 hover:text-blue-500 font-medium transition-colors" 
                   href="/register"
                 >
-                  Зарегистрироваться
+                  {t('auth.register')}
                 </a>
               </p>
             </div>
@@ -213,10 +215,10 @@ export default function LoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Проверка подключения...
+                    {t('auth.checkingConnection')}
                   </>
                 ) : (
-                  "🔍 Проверить подключение к серверу"
+                  "🔍 " + t('auth.checkConnection')
                 )}
               </button>
             </div>

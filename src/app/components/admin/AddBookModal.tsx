@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "../../../lib/translations";
 import { CreateBookRequest, BOOK_GENRES, BOOK_LANGUAGES } from "../../../types/book";
 
 interface AddBookModalProps {
@@ -18,6 +19,7 @@ export default function AddBookModal({
   creating, 
   errors
 }: AddBookModalProps) {
+  const { t } = useTranslations();
   const [formData, setFormData] = useState<CreateBookRequest>({
     title: '',
     author: '',
@@ -50,7 +52,14 @@ export default function AddBookModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Если URL изображения не указан, используем изображение по умолчанию
+    const dataToSubmit = {
+      ...formData,
+      imageUrl: formData.imageUrl?.trim() || '/default-book-cover.svg'
+    };
+    
+    onSubmit(dataToSubmit);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -76,7 +85,7 @@ export default function AddBookModal({
       <div className="bg-[var(--card)] border border-white/10 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h3 className="text-lg sm:text-xl font-semibold text-[var(--foreground)]">
-            Добавить новую книгу
+            {t('admin.modals.addBook.title')}
           </h3>
           <button
             onClick={onClose}
@@ -92,7 +101,7 @@ export default function AddBookModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Название *
+                {t('admin.modals.addBook.bookTitle')} *
               </label>
               <input
                 type="text"
@@ -102,7 +111,7 @@ export default function AddBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.title ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="Название книги"
+                placeholder={t('admin.modals.addBook.titlePlaceholder')}
                 required
               />
               {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title}</p>}
@@ -110,7 +119,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Автор *
+                {t('admin.modals.addBook.author')} *
               </label>
               <input
                 type="text"
@@ -120,7 +129,7 @@ export default function AddBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.author ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="Автор книги"
+                placeholder={t('admin.modals.addBook.authorPlaceholder')}
                 required
               />
               {errors.author && <p className="text-red-400 text-xs mt-1">{errors.author}</p>}
@@ -128,7 +137,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                ISBN *
+                {t('admin.modals.addBook.isbn')} *
               </label>
               <input
                 type="text"
@@ -138,7 +147,7 @@ export default function AddBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.isbn ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="ISBN"
+                placeholder={t('admin.modals.addBook.isbnPlaceholder')}
                 required
               />
               {errors.isbn && <p className="text-red-400 text-xs mt-1">{errors.isbn}</p>}
@@ -146,7 +155,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Жанр *
+                {t('admin.modals.addBook.genre')} *
               </label>
               <select
                 name="genre"
@@ -162,7 +171,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Язык *
+                {t('admin.modals.addBook.language')} *
               </label>
               <select
                 name="language"
@@ -178,7 +187,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Год издания *
+                {t('admin.modals.addBook.publishedYear')} *
               </label>
               <input
                 type="number"
@@ -197,7 +206,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Количество страниц *
+                {t('admin.modals.addBook.pageCount')} *
               </label>
               <input
                 type="number"
@@ -215,7 +224,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Цена (€) *
+                {t('admin.modals.addBook.price')} *
               </label>
               <input
                 type="number"
@@ -234,7 +243,7 @@ export default function AddBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                URL изображения
+                {t('admin.modals.addBook.imageUrl')} <span className="text-[var(--muted)] text-xs">({t('admin.modals.addBook.optional')})</span>
               </label>
               <input
                 type="url"
@@ -242,7 +251,7 @@ export default function AddBookModal({
                 value={formData.imageUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)]"
-                placeholder="https://example.com/image.jpg"
+                placeholder={t('admin.modals.addBook.imageUrlPlaceholder')}
               />
             </div>
 
@@ -255,21 +264,21 @@ export default function AddBookModal({
                 className="h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)] border-white/20 rounded bg-[var(--card)]"
               />
               <label className="ml-2 block text-sm text-[var(--muted)]">
-                Доступна для заказа
+                {t('admin.modals.addBook.available')}
               </label>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-              Описание
+              {t('admin.modals.addBook.description')}
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)]"
-              placeholder="Описание книги"
+              placeholder={t('admin.modals.addBook.descriptionPlaceholder')}
               rows={4}
             />
           </div>
@@ -280,14 +289,14 @@ export default function AddBookModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-[var(--muted)] bg-[var(--card)] border border-white/20 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] transition-colors"
             >
-              Отмена
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={creating}
               className="px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] bg-[var(--accent)] border border-transparent rounded-lg hover:bg-[var(--accent)]/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
             >
-              {creating ? 'Создание...' : 'Создать книгу'}
+              {creating ? t('admin.modals.addBook.creating') : t('admin.modals.addBook.create')}
             </button>
           </div>
         </form>
