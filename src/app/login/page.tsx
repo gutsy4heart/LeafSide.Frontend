@@ -45,10 +45,19 @@ export default function LoginPage() {
           errorMessage = errorText || errorMessage;
         }
         
-        // Специальная обработка для ошибки подключения к бэкенду
-        if (res.status === 502) {
-          errorMessage = t('auth.serverUnavailable');
-          errorDetails = "Проверьте, что бэкенд запущен. Попробуйте запустить: cd LeafSide-backend && dotnet run --project LeafSide.API";
+        // Специальная обработка для ошибок
+        if (res.status === 401 || res.status === 403) {
+          // Неправильные учетные данные - показываем простое сообщение
+          errorMessage = t('auth.invalidCredentials');
+          errorDetails = "";
+        } else if (res.status === 502) {
+          // Ошибка подключения к бэкенду - показываем простое сообщение
+          errorMessage = t('auth.invalidCredentials');
+          errorDetails = "";
+        } else if (res.status >= 400 && res.status < 500) {
+          // Другие клиентские ошибки - возможно неправильные учетные данные
+          errorMessage = t('auth.invalidCredentials');
+          errorDetails = "";
         }
         
         const fullError = errorDetails ? `${errorMessage}\n\n${errorDetails}` : errorMessage;
@@ -90,12 +99,12 @@ export default function LoginPage() {
       });
       
       if (res.status === 502) {
-        setError(t('auth.serverUnavailable') + ". Проверьте, что бэкенд запущен на порту 5233.");
+        setError(t('auth.invalidCredentials'));
       } else {
-        setError("Сервер отвечает, но есть проблемы с подключением.");
+        setError(t('auth.invalidCredentials'));
       }
     } catch (err) {
-      setError("Не удалось подключиться к серверу.");
+      setError(t('auth.invalidCredentials'));
     } finally {
       setCheckingConnection(false);
     }
@@ -156,11 +165,6 @@ export default function LoginPage() {
                   <div className="text-sm text-red-800 whitespace-pre-line">
                     {error}
                   </div>
-                  {error.includes("Сервер недоступен") && (
-                    <div className="mt-2 text-xs text-red-600">
-                      💡 Убедитесь, что бэкенд запущен в отдельном терминале
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

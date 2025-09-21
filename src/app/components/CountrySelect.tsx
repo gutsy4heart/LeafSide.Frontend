@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "../../lib/translations";
 
 interface Country {
   code: string;
@@ -273,16 +274,22 @@ interface CountrySelectProps {
 }
 
 export default function CountrySelect({ value, onChange, disabled = false }: CountrySelectProps) {
+  const { t } = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const getCountryName = (countryCode: string) => {
+    return t(`countrySelect.countries.${countryCode}`) || countries.find(c => c.code === countryCode)?.name || countryCode;
+  };
+
   const selectedCountry = countries.find(country => country.code === value) || countries[0];
 
-  const filteredCountries = countries.filter(country =>
-    country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    country.phoneCode.includes(searchTerm)
-  );
+  const filteredCountries = countries.filter(country => {
+    const translatedName = getCountryName(country.code);
+    return translatedName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           country.phoneCode.includes(searchTerm);
+  });
 
   // Закрытие дропдауна при клике вне его
   useEffect(() => {
@@ -315,7 +322,7 @@ export default function CountrySelect({ value, onChange, disabled = false }: Cou
       >
         <div className="flex items-center gap-1.5">
           <span className="text-base">{selectedCountry.flag}</span>
-          <span className="text-xs text-[var(--foreground)] truncate">{selectedCountry.name}</span>
+          <span className="text-xs text-[var(--foreground)] truncate">{getCountryName(selectedCountry.code)}</span>
           <span className="text-xs text-[var(--muted)]">({selectedCountry.phoneCode})</span>
         </div>
         <svg 
@@ -333,7 +340,7 @@ export default function CountrySelect({ value, onChange, disabled = false }: Cou
           <div className="p-3 border-b border-white/10">
             <input
               type="text"
-              placeholder="Поиск страны..."
+              placeholder={t('countrySelect.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-9 px-3 py-2 bg-[var(--card)] border border-white/20 rounded-md text-sm text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
@@ -349,7 +356,7 @@ export default function CountrySelect({ value, onChange, disabled = false }: Cou
               >
                 <span className="text-lg">{country.flag}</span>
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-[var(--foreground)] group-hover:text-blue-400 transition-colors">{country.name}</div>
+                  <div className="text-sm font-medium text-[var(--foreground)] group-hover:text-blue-400 transition-colors">{getCountryName(country.code)}</div>
                   <div className="text-xs text-[var(--muted)]">{country.phoneCode}</div>
                 </div>
               </button>

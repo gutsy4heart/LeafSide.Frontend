@@ -1,6 +1,7 @@
 "use client";
 
 import { UserWithRole, UserRole } from "../../../types/user";
+import { useTranslations } from "../../../lib/translations";
 
 interface UserManagementProps {
   users: UserWithRole[];
@@ -27,6 +28,8 @@ export default function UserManagement({
   handleDeleteUser,
   setShowAddUserForm
 }: UserManagementProps) {
+  const { t } = useTranslations();
+  
   return (
     <>
       {/* Поиск и фильтрация */}
@@ -34,7 +37,7 @@ export default function UserManagement({
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-              Поиск пользователей
+              {t('admin.userManagement.searchUsers')}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -44,7 +47,7 @@ export default function UserManagement({
               </div>
               <input
                 type="text"
-                placeholder="Поиск по email или имени..."
+                placeholder={t('admin.userManagement.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-9 sm:pl-10 pr-3 py-2 border border-white/20 rounded-lg leading-5 bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
@@ -53,22 +56,22 @@ export default function UserManagement({
           </div>
           <div className="sm:w-48">
             <label className="block text-sm font-medium text-[var(--muted)] mb-2">
-              Фильтр по роли
+              {t('admin.userManagement.filterByRole')}
             </label>
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
               className="block w-full px-3 py-2 border border-white/20 rounded-lg leading-5 bg-[var(--card)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
             >
-              <option value="all">Все роли</option>
-              <option value="admin">Администраторы</option>
-              <option value="user">Пользователи</option>
+              <option value="all">{t('admin.userManagement.allRoles')}</option>
+              <option value="admin">{t('admin.userManagement.administrators')}</option>
+              <option value="user">{t('admin.userManagement.users')}</option>
             </select>
           </div>
         </div>
         
         <div className="mt-4 text-sm text-[var(--muted)]">
-          Показано {filteredUsers.length} из {users.length} пользователей
+          {t('admin.userManagement.showingResults', { filtered: filteredUsers.length, total: users.length })}
         </div>
       </div>
 
@@ -80,11 +83,11 @@ export default function UserManagement({
               <svg className="w-12 h-12 text-[var(--muted)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
               </svg>
-              <p className="text-lg font-medium text-[var(--foreground)] mb-2">Пользователи не найдены</p>
+              <p className="text-lg font-medium text-[var(--foreground)] mb-2">{t('admin.userManagement.noUsersFound')}</p>
               <p className="text-[var(--muted)]">
                 {searchTerm || roleFilter !== 'all' 
-                  ? 'Попробуйте изменить параметры поиска или фильтрации'
-                  : 'Пользователи будут отображены здесь'
+                  ? t('admin.userManagement.tryDifferentSearch')
+                  : t('admin.userManagement.usersWillAppearHere')
                 }
               </p>
             </div>
@@ -97,16 +100,16 @@ export default function UserManagement({
                 <thead className="bg-[var(--card)]">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
-                      Пользователь
+                      {t('admin.userManagement.user')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
-                      Email
+                      {t('admin.userManagement.email')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
-                      Текущая роль
+                      {t('admin.userManagement.currentRole')}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[var(--muted)] uppercase tracking-wider">
-                      Действия
+                      {t('admin.userManagement.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -135,11 +138,11 @@ export default function UserManagement({
                         <div className="flex items-center gap-2">
                           {user.roles.includes('Admin') ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300">
-                              Администратор
+                              {t('admin.userManagement.administrators')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                              Пользователь
+                              {t('admin.userManagement.users')}
                             </span>
                           )}
                         </div>
@@ -152,13 +155,13 @@ export default function UserManagement({
                             disabled={updatingRole === user.id}
                             className="text-sm border border-white/20 rounded px-2 py-1 bg-[var(--card)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:opacity-50"
                           >
-                            <option value="User">Пользователь</option>
-                            <option value="Admin">Администратор</option>
+                            <option value="User">{t('admin.userManagement.users')}</option>
+                            <option value="Admin">{t('admin.userManagement.administrators')}</option>
                           </select>
                           <button
                             onClick={() => handleDeleteUser(user)}
                             className="text-red-400 hover:text-red-300 p-1 transition-colors"
-                            title="Удалить пользователя"
+                            title={t('admin.userManagement.deleteUser')}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -193,11 +196,11 @@ export default function UserManagement({
                     <div className="flex items-center gap-2">
                       {user.roles.includes('Admin') ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300">
-                          Администратор
+                          {t('admin.userManagement.administrators')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-300">
-                          Пользователь
+                          {t('admin.userManagement.users')}
                         </span>
                       )}
                     </div>
@@ -215,8 +218,8 @@ export default function UserManagement({
                       disabled={updatingRole === user.id}
                       className="flex-1 text-sm border border-white/20 rounded px-3 py-2 bg-[var(--card)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent disabled:opacity-50"
                     >
-                      <option value="User">Пользователь</option>
-                      <option value="Admin">Администратор</option>
+                      <option value="User">{t('admin.userManagement.users')}</option>
+                      <option value="Admin">{t('admin.userManagement.administrators')}</option>
                     </select>
                     <button
                       onClick={() => handleDeleteUser(user)}
@@ -225,7 +228,7 @@ export default function UserManagement({
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      <span className="text-sm">Удалить</span>
+                      <span className="text-sm">{t('admin.userManagement.delete')}</span>
                     </button>
                   </div>
                 </div>

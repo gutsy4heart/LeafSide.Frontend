@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../auth-context';
+import { useTranslations } from '../../lib/translations';
 
 interface OrderItem {
   id: string;
@@ -33,13 +34,14 @@ interface OrdersListProps {
 
 export default function OrdersList({ onOrderClick }: OrdersListProps) {
   const { token, checkAndRefreshToken } = useAuth();
+  const { t } = useTranslations();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadOrders = async () => {
     if (!token) {
-      setError('Токен авторизации не найден');
+      setError(t('orders.loadError'));
       setLoading(false);
       return;
     }
@@ -47,13 +49,13 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
     try {
       const tokenValid = await checkAndRefreshToken();
       if (!tokenValid) {
-        setError('Сессия истекла. Пожалуйста, войдите снова.');
+        setError(t('orders.loadError'));
         setLoading(false);
         return;
       }
 
       if (!token) {
-        setError('Не удалось получить актуальный токен.');
+        setError(t('orders.loadError'));
         setLoading(false);
         return;
       }
@@ -82,23 +84,23 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
         } else {
           const text = await response.text();
           console.error('Получен не JSON ответ:', text.substring(0, 200));
-          setError('Сервер вернул неожиданный формат данных');
+          setError(t('orders.loadError'));
         }
       } else {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const errorData = await response.json().catch(() => ({}));
           console.error('Ошибка при загрузке заказов:', errorData);
-          setError(errorData.error || `Ошибка при загрузке заказов (${response.status})`);
+          setError(errorData.error || t('orders.loadError'));
         } else {
           const text = await response.text();
           console.error('Получен не JSON ответ при ошибке:', text.substring(0, 200));
-          setError(`Ошибка сервера (${response.status}): ${text.substring(0, 100)}`);
+          setError(t('orders.loadError'));
         }
       }
     } catch (err) {
       console.error('Ошибка при загрузке заказов:', err);
-      setError('Произошла ошибка при загрузке заказов');
+      setError(t('orders.loadError'));
     } finally {
       setLoading(false);
     }
@@ -106,19 +108,19 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
 
   const confirmDelivery = async (orderId: string) => {
     if (!token) {
-      setError('Токен авторизации не найден');
+      setError(t('orders.loadError'));
       return;
     }
 
     try {
       const tokenValid = await checkAndRefreshToken();
       if (!tokenValid) {
-        setError('Сессия истекла. Пожалуйста, войдите снова.');
+        setError(t('orders.loadError'));
         return;
       }
 
       if (!token) {
-        setError('Не удалось получить актуальный токен.');
+        setError(t('orders.loadError'));
         return;
       }
 
@@ -151,11 +153,11 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ошибка при подтверждении доставки:', errorData);
-        setError(errorData.error || `Ошибка при подтверждении доставки (${response.status})`);
+        setError(errorData.error || t('orders.loadError'));
       }
     } catch (err) {
       console.error('Ошибка при подтверждении доставки:', err);
-      setError('Произошла ошибка при подтверждении доставки');
+      setError(t('orders.loadError'));
     }
   };
 
@@ -193,15 +195,15 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
   const getStatusText = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'Ожидает обработки';
+        return t('orders.statusPending');
       case 'processing':
-        return 'В обработке';
+        return t('orders.statusProcessing');
       case 'shipped':
-        return 'Отправлен';
+        return t('orders.statusShipped');
       case 'delivered':
-        return 'Доставлен';
+        return t('orders.statusDelivered');
       case 'cancelled':
-        return 'Отменен';
+        return t('orders.statusCancelled');
       default:
         return status;
     }
@@ -211,8 +213,8 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">Загрузка заказов...</h3>
-        <p className="text-[var(--muted)]">Получаем данные с сервера</p>
+        <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">{t('orders.loadingOrders')}</h3>
+        <p className="text-[var(--muted)]">{t('orders.gettingData')}</p>
       </div>
     );
   }
@@ -221,13 +223,13 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">⚠️</div>
-        <h3 className="text-xl font-semibold text-red-400 mb-2">Ошибка загрузки</h3>
+        <h3 className="text-xl font-semibold text-red-400 mb-2">{t('orders.loadError')}</h3>
         <p className="text-[var(--muted)] mb-6">{error}</p>
         <button 
           onClick={loadOrders}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
         >
-          Попробовать снова
+          {t('orders.tryAgain')}
         </button>
       </div>
     );
@@ -237,13 +239,13 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
     return (
       <div className="text-center py-12">
         <div className="text-6xl mb-4">📦</div>
-        <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">Заказов пока нет</h3>
-        <p className="text-[var(--muted)] mb-6">Когда вы сделаете первый заказ, он появится здесь</p>
+        <h3 className="text-xl font-semibold text-[var(--foreground)] mb-2">{t('orders.noOrders')}</h3>
+        <p className="text-[var(--muted)] mb-6">{t('orders.noOrdersDescription')}</p>
         <button 
           onClick={() => window.location.href = '/'}
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
         >
-          Перейти к покупкам
+          {t('orders.goShopping')}
         </button>
       </div>
     );
@@ -254,7 +256,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-[var(--foreground)] flex items-center gap-3">
           <span className="text-2xl">📦</span>
-          История заказов
+          {t('orders.orderHistory')}
         </h2>
         <button 
           onClick={loadOrders}
@@ -263,7 +265,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Обновить
+{t('orders.refresh')}
         </button>
       </div>
 
@@ -278,7 +280,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                    Заказ #{order.id.slice(-8)}
+                    {t('orders.orderNumber')} #{order.id.slice(-8)}
                   </h3>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
                     {getStatusText(order.status)}
@@ -286,16 +288,16 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
                 </div>
                 
                 <div className="text-sm text-[var(--muted)] mb-3">
-                  Создан: {formatDate(order.createdAt)}
+                  {t('orders.created')}: {formatDate(order.createdAt)}
                 </div>
 
                 <div className="space-y-2">
                   <div className="text-sm">
-                    <span className="text-[var(--muted)]">Товаров: </span>
+                    <span className="text-[var(--muted)]">{t('orders.itemsCount')}: </span>
                     <span className="text-[var(--foreground)] font-medium">{order.items.length}</span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-[var(--muted)]">Сумма: </span>
+                    <span className="text-[var(--muted)]">{t('orders.amount')}: </span>
                     <span className="text-[var(--foreground)] font-medium text-lg">
                       {order.totalAmount.toFixed(2)} €
                     </span>
@@ -312,7 +314,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
                 
                 <div className="flex gap-2">
                   <button className="px-3 py-1 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition-colors">
-                    Подробнее
+                    {t('orders.moreDetails')}
                   </button>
                   {(order.status === 'Shipped' || order.status === 'Pending') && (
                     <button 
@@ -325,7 +327,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
-                      Подтвердить получение
+{t('orders.confirmDelivery')}
                     </button>
                   )}
                 </div>
@@ -335,7 +337,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
             {/* Детали заказа (показываются при клике) */}
             <div className="mt-4 pt-4 border-t border-white/10">
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-[var(--foreground)]">Товары в заказе:</h4>
+                <h4 className="text-sm font-medium text-[var(--foreground)]">{t('orders.orderItems')}:</h4>
                 {order.items.map((item, index) => (
                   <div key={index} className="flex items-center justify-between text-sm">
                     <div className="flex-1">

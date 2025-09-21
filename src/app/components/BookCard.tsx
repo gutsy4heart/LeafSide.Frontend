@@ -20,7 +20,7 @@ export default function BookCard({ book }: BookCardProps) {
     e.stopPropagation();
     
     if (!book.isAvailable) {
-      return; // Не добавляем недоступную книгу
+      return; // Don't add unavailable books
     }
     
     setIsAdding(true);
@@ -29,7 +29,7 @@ export default function BookCard({ book }: BookCardProps) {
     } catch (error) {
       console.error('BookCard - Error adding to cart:', error);
     } finally {
-      // Небольшая задержка для визуального эффекта
+      // Small delay for visual effect
       setTimeout(() => setIsAdding(false), 500);
     }
   };
@@ -73,7 +73,7 @@ export default function BookCard({ book }: BookCardProps) {
         </div>
       </Link>
       
-      {/* Кнопка добавления в корзину */}
+      {/* Add to cart button */}
       <div className="mt-3 pt-3 border-t border-white/10">
         <button
           onClick={handleAddToCart}

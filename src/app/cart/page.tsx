@@ -135,7 +135,7 @@ export default function CartPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('cart.title')}</h1>
           <div className="text-sm text-[var(--muted)]">
-            {getTotalItems()} {getTotalItems() === 1 ? t('cart.items') : t('cart.itemsPlural')} на сумму €{getTotalPrice().toFixed(2)}
+            {t('cart.itemsSummary', { count: getTotalItems(), amount: getTotalPrice().toFixed(2) })}
           </div>
         </div>
 
@@ -168,16 +168,16 @@ export default function CartPage() {
                         <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1 truncate">
                           {book.title}
                         </h3>
-                        <p className="text-[var(--muted)] mb-2">Автор: {book.author}</p>
+                        <p className="text-[var(--muted)] mb-2">{t('cart.author')}: {book.author}</p>
                         <p className="text-[var(--muted)] text-sm mb-3">
-                          {book.publishedYear} • {book.pageCount} стр. • {book.language}
+                          {book.publishedYear} • {book.pageCount} {t('cart.pages')} • {book.language}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-xl font-bold text-[var(--accent)]">
                             €{book.price.toFixed(2)}
                           </span>
                           <span className="text-sm text-[var(--muted)]">
-                            за штуку
+                            {t('cart.perItem')}
                           </span>
                         </div>
                       </div>
@@ -214,7 +214,7 @@ export default function CartPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                          Удалить
+{t('cart.remove')}
                         </button>
                       </div>
                     </div>
@@ -233,7 +233,7 @@ export default function CartPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Очистить корзину
+{t('cart.clearCart')}
               </button>
             </div>
           </div>
@@ -241,20 +241,20 @@ export default function CartPage() {
           {/* Итоговая информация */}
           <div className="lg:col-span-1">
             <div className="bg-[var(--card)] border border-white/10 rounded-lg p-6 sticky top-8">
-              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Итого</h2>
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">{t('cart.total')}</h2>
               
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-sm">
-                  <span className="text-[var(--muted)]">Товары ({getTotalItems()})</span>
+                  <span className="text-[var(--muted)]">{t('cart.totalItems')} ({getTotalItems()})</span>
                   <span>€{getTotalPrice().toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-[var(--muted)]">Доставка</span>
-                  <span className="text-green-500">Бесплатно</span>
+                  <span className="text-[var(--muted)]">{t('cart.shipping')}</span>
+                  <span className="text-green-500">{t('cart.free')}</span>
                 </div>
                 <div className="border-t border-white/10 pt-3">
                   <div className="flex justify-between text-lg font-semibold">
-                    <span>Общая сумма</span>
+                    <span>{t('cart.totalAmount')}</span>
                     <span className="text-[var(--accent)]">€{getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
@@ -265,25 +265,25 @@ export default function CartPage() {
                   onClick={() => setShowOrderModal(true)}
                   className="w-full bg-[var(--accent)] text-white py-3 px-4 rounded-lg hover:bg-[var(--accent)]/80 transition-colors font-medium"
                 >
-                  Оформить заказ
+{t('cart.checkout')}
                 </button>
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-[var(--muted)] text-center">
-                    Для оформления заказа необходимо войти в систему
+                    {t('cart.loginToOrder')}
                   </p>
                   <Link 
                     href="/login"
                     className="w-full bg-[var(--accent)] text-white py-3 px-4 rounded-lg hover:bg-[var(--accent)]/80 transition-colors font-medium text-center block"
                   >
-                    Войти
+{t('cart.login')}
                   </Link>
                 </div>
               )}
 
               <div className="mt-4 text-xs text-[var(--muted)] text-center">
-                <p>Безопасная оплата</p>
-                <p>Быстрая доставка</p>
+                <p>{t('cart.securePayment')}</p>
+                <p>{t('cart.fastDelivery')}</p>
               </div>
             </div>
           </div>

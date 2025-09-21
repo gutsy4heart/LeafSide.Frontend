@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../auth-context";
 import { useCart } from "../cart-context";
+import { useTranslations } from "../../lib/translations";
 
 interface OrderConfirmationModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function OrderConfirmationModal({
 }: OrderConfirmationModalProps) {
   const { token, checkAndRefreshToken } = useAuth();
   const { state, clear } = useCart();
+  const { t } = useTranslations();
   const [step, setStep] = useState<'confirm' | 'processing' | 'success'>('confirm');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export default function OrderConfirmationModal({
 
   const handleConfirmOrder = async () => {
     if (!token) {
-      setError('Необходимо войти в систему');
+      setError(t('orderConfirmation.loginRequired'));
       return;
     }
 
@@ -47,7 +49,7 @@ export default function OrderConfirmationModal({
       // Проверяем и обновляем токен при необходимости
       const tokenValid = await checkAndRefreshToken();
       if (!tokenValid) {
-        setError('Сессия истекла. Пожалуйста, войдите в систему заново.');
+        setError(t('orderConfirmation.sessionExpired'));
         setStep('confirm');
         return;
       }
@@ -95,12 +97,12 @@ export default function OrderConfirmationModal({
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('Ошибка при создании заказа:', errorData);
-        setError(errorData.error || `Ошибка при оформлении заказа (${response.status})`);
+        setError(errorData.error || t('orderConfirmation.orderErrorDetails'));
         setStep('confirm');
       }
     } catch (err) {
       console.error('Ошибка при оформлении заказа:', err);
-      setError('Произошла ошибка при оформлении заказа');
+      setError(t('orderConfirmation.orderError'));
       setStep('confirm');
     } finally {
       setLoading(false);
@@ -115,7 +117,7 @@ export default function OrderConfirmationModal({
         {/* Заголовок */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-semibold text-[var(--foreground)]">
-            Подтверждение заказа
+            {t('orderConfirmation.title')}
           </h3>
           {step === 'confirm' && (
             <button
@@ -134,22 +136,22 @@ export default function OrderConfirmationModal({
           <div className="space-y-6">
             {/* Информация о заказе */}
             <div className="bg-[var(--background)] rounded-lg p-4">
-              <h4 className="font-medium text-[var(--foreground)] mb-3">Детали заказа</h4>
+              <h4 className="font-medium text-[var(--foreground)] mb-3">{t('orderConfirmation.orderDetails')}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">Товаров:</span>
-                  <span className="text-[var(--foreground)]">{totalItems} шт.</span>
+                  <span className="text-[var(--muted)]">{t('orderConfirmation.items')}:</span>
+                  <span className="text-[var(--foreground)]">{totalItems}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">Сумма:</span>
+                  <span className="text-[var(--muted)]">{t('orderConfirmation.amount')}:</span>
                   <span className="text-[var(--foreground)] font-medium">€{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">Доставка:</span>
-                  <span className="text-green-400">Бесплатно</span>
+                  <span className="text-[var(--muted)]">{t('orderConfirmation.shipping')}:</span>
+                  <span className="text-green-400">{t('orderConfirmation.free')}</span>
                 </div>
                 <div className="border-t border-white/10 pt-2 flex justify-between font-medium">
-                  <span className="text-[var(--foreground)]">Итого:</span>
+                  <span className="text-[var(--foreground)]">{t('orderConfirmation.total')}:</span>
                   <span className="text-[var(--accent)]">€{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
@@ -168,14 +170,14 @@ export default function OrderConfirmationModal({
                 onClick={onClose}
                 className="flex-1 px-4 py-2 text-sm font-medium text-[var(--muted)] bg-[var(--card)] border border-white/20 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] transition-colors"
               >
-                Отмена
+{t('orderConfirmation.cancel')}
               </button>
               <button
                 onClick={handleConfirmOrder}
                 disabled={loading}
                 className="flex-1 px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] bg-[var(--accent)] border border-transparent rounded-lg hover:bg-[var(--accent)]/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
               >
-                {loading ? 'Обработка...' : 'Подтвердить заказ'}
+{loading ? t('orderConfirmation.processing') : t('orderConfirmation.confirm')}
               </button>
             </div>
           </div>
@@ -191,10 +193,10 @@ export default function OrderConfirmationModal({
             </div>
             <div>
               <h4 className="text-lg font-medium text-[var(--foreground)] mb-2">
-                Обработка заказа
+                {t('orderConfirmation.processingTitle')}
               </h4>
               <p className="text-[var(--muted)] text-sm">
-                Пожалуйста, подождите. Мы обрабатываем ваш заказ...
+                {t('orderConfirmation.processingDescription')}
               </p>
             </div>
           </div>
@@ -214,13 +216,13 @@ export default function OrderConfirmationModal({
             </div>
             <div>
               <h4 className="text-lg font-medium text-[var(--foreground)] mb-2">
-                Заказ успешно оформлен!
+                {t('orderConfirmation.successTitle')}
               </h4>
               <p className="text-[var(--muted)] text-sm mb-4">
-                Ваш заказ на сумму €{totalAmount.toFixed(2)} принят в обработку.
+                {t('orderConfirmation.successDescription', { amount: totalAmount.toFixed(2) })}
               </p>
               <p className="text-[var(--muted)] text-xs">
-                Модальное окно закроется автоматически...
+                {t('orderConfirmation.autoClose')}
               </p>
             </div>
           </div>
