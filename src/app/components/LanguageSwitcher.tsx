@@ -27,6 +27,16 @@ export default function LanguageSwitcher() {
       >
         EN
       </button>
+      <button
+        onClick={() => setLanguage('pl')}
+        className={`px-2 py-1 text-sm rounded transition-colors ${
+          language === 'pl' 
+            ? 'bg-blue-600 text-white' 
+            : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+        }`}
+      >
+        PL
+      </button>
     </div>
   );
 }

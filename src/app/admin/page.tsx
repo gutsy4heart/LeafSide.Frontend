@@ -30,6 +30,22 @@ export default function AdminPage() {
   const router = useRouter();
   const { toasts, showToast } = useToast();
 
+  // Универсальная функция для безопасного парсинга JSON ответов
+  const safeJsonParse = async (response: Response) => {
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        const text = await response.text();
+        return text ? { message: text } : { success: true };
+      }
+    } catch (error) {
+      console.error('Error parsing response:', error);
+      return { error: `HTTP ${response.status}: ${response.statusText}` };
+    }
+  };
+
   // Состояние для пользователей
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,18 +181,20 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await safeJsonParse(response);
         console.error('Admin: Error response:', errorData);
-        throw new Error(errorData.error || 'Ошибка при загрузке пользователей');
+        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке пользователей');
       }
       
-      const data = await response.json();
+      const data = await safeJsonParse(response);
       console.log('Admin: Users data received:', data);
       setUsers(data);
       
       // Рассчитываем статистику
       const totalUsers = data.length;
-      const adminUsers = data.filter((user: any) => user.roles.includes('Admin')).length;
+      const adminUsers = data.filter((user: any) => 
+        user.roles && Array.isArray(user.roles) && user.roles.includes('Admin')
+      ).length;
       const regularUsers = totalUsers - adminUsers;
       const recentUsers = data.filter((user: any) => {
         const createdAt = new Date(user.createdAt);
@@ -221,12 +239,12 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await safeJsonParse(response);
         console.error('Admin: Books error response:', errorData);
-        throw new Error(errorData.error || 'Ошибка при загрузке книг');
+        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке книг');
       }
       
-      const data = await response.json();
+      const data = await safeJsonParse(response);
       console.log('Admin: Books data received:', data);
       setBooks(data);
     } catch (err) {
@@ -259,12 +277,12 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await safeJsonParse(response);
         console.error('Admin: Orders error response:', errorData);
-        throw new Error(errorData.error || 'Ошибка при загрузке заказов');
+        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке заказов');
       }
       
-      const data = await response.json();
+      const data = await safeJsonParse(response);
       console.log('Admin: Orders data received:', data);
       setOrders(data);
     } catch (err) {
@@ -297,12 +315,12 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await safeJsonParse(response);
         console.error('Admin: Carts error response:', errorData);
-        throw new Error(errorData.error || 'Ошибка при загрузке корзин');
+        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке корзин');
       }
       
-      const data = await response.json();
+      const data = await safeJsonParse(response);
       console.log('Admin: Carts data received:', data);
       
       // Обогащаем данные корзин информацией о пользователях
@@ -348,10 +366,11 @@ export default function AdminPage() {
   // Фильтрация данных
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.userName.toLowerCase().includes(searchTerm.toLowerCase());
+                         (user.firstName && user.firstName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (user.lastName && user.lastName.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole = roleFilter === 'all' || 
-                       (roleFilter === 'admin' && user.roles.includes('Admin')) ||
-                       (roleFilter === 'user' && !user.roles.includes('Admin'));
+                       (roleFilter === 'admin' && user.roles && Array.isArray(user.roles) && user.roles.includes('Admin')) ||
+                       (roleFilter === 'user' && (!user.roles || !Array.isArray(user.roles) || !user.roles.includes('Admin')));
     return matchesSearch && matchesRole;
   });
 
@@ -393,12 +412,12 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await safeJsonParse(response);
         console.error('Admin: Error updating user role:', errorData);
-        throw new Error(errorData.error || "Failed to update user role");
+        throw new Error(errorData.error || errorData.message || "Failed to update user role");
       }
       
-      const result = await response.json();
+      const result = await safeJsonParse(response);
       console.log('Admin: Role updated successfully:', result);
       
       // Обновляем локальное состояние
@@ -437,8 +456,8 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete user");
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || "Failed to delete user");
       }
       
       setUsers(prevUsers => prevUsers.filter(user => user.id !== deleteDialog.user!.id));
@@ -467,6 +486,9 @@ export default function AdminPage() {
         return;
       }
 
+      console.log('Admin: Creating user with data:', userData);
+      console.log('Admin: User data JSON:', JSON.stringify(userData, null, 2));
+
       const response = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
@@ -477,11 +499,19 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при создании пользователя');
+        console.log('Admin: User creation failed - Response status:', response.status, response.statusText);
+        console.log('Admin: Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        const errorData = await safeJsonParse(response);
+        console.log('Admin: Parsed error data:', errorData);
+        
+        const errorMessage = errorData.error || errorData.message || `HTTP ${response.status}: ${response.statusText}`;
+        console.log('Admin: Final error message:', errorMessage);
+        
+        throw new Error(errorMessage);
       }
 
-      const result = await response.json();
+      const result = await safeJsonParse(response);
       console.log('Admin: User created successfully:', result);
       
       setShowAddUserForm(false);
@@ -495,6 +525,8 @@ export default function AdminPage() {
         gender: 'Male'
       });
       showToast('Пользователь создан', 'success');
+      
+      // Обновляем список пользователей после создания
       fetchUsers();
     } catch (err) {
       console.error('Admin: Error creating user:', err);
@@ -572,11 +604,11 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при создании книги');
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при создании книги');
       }
 
-      const result = await response.json();
+      const result = await safeJsonParse(response);
       console.log('Admin: Book created successfully:', result);
       
       setShowAddBookForm(false);
@@ -630,11 +662,11 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Ошибка при обновлении книги');
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при обновлении книги');
       }
 
-      const result = await response.json();
+      const result = await safeJsonParse(response);
       console.log('Admin: Book updated successfully:', result);
       
       setShowEditBookForm(false);
@@ -667,8 +699,8 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete book");
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || "Failed to delete book");
       }
       
       setBooks(prevBooks => prevBooks.filter(book => book.id !== bookDeleteDialog.book!.id));
@@ -703,16 +735,9 @@ export default function AdminPage() {
       console.log('Admin: Response content-type:', response.headers.get('content-type'));
 
       if (!response.ok) {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          console.error('Admin: Error data (JSON):', errorData);
-          throw new Error(errorData.error || 'Ошибка при обновлении статуса заказа');
-        } else {
-          const text = await response.text();
-          console.error('Admin: Error data (not JSON):', text.substring(0, 200));
-          throw new Error(`Ошибка сервера: ${text.substring(0, 100)}`);
-        }
+        const errorData = await safeJsonParse(response);
+        console.error('Admin: Error data:', errorData);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при обновлении статуса заказа');
       }
 
       setOrders(prevOrders => 

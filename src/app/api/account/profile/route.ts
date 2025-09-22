@@ -9,8 +9,11 @@ export async function GET(request: NextRequest) {
 	try {
 		const authHeader = request.headers.get("authorization");
 		if (!authHeader) {
+			console.log('Profile API - No authorization header');
 			return NextResponse.json({ error: "Authorization header required" }, { status: 401 });
 		}
+
+		console.log('Profile API - Fetching profile from backend:', `${BASE_URL}/api/Account/profile`);
 
 		const res = await fetch(`${BASE_URL}/api/Account/profile`, {
 			method: "GET",
@@ -20,14 +23,32 @@ export async function GET(request: NextRequest) {
 			},
 		});
 
+		console.log('Profile API - Backend response status:', res.status, res.statusText);
+
 		if (!res.ok) {
 			const text = await res.text();
+			console.log('Profile API - Backend error:', text);
 			return NextResponse.json({ error: text || "Upstream error" }, { status: res.status });
 		}
 
 		const data = await res.json();
+		console.log('Profile API - Backend data received:', data);
+		console.log('Profile API - Data properties:', {
+			firstName: data.firstName,
+			lastName: data.lastName,
+			phoneNumber: data.phoneNumber,
+			countryCode: data.countryCode,
+			gender: data.gender,
+			FirstName: data.FirstName,
+			LastName: data.LastName,
+			PhoneNumber: data.PhoneNumber,
+			CountryCode: data.CountryCode,
+			Gender: data.Gender
+		});
+		
 		return NextResponse.json(data);
 	} catch (err: unknown) {
+		console.error('Profile API - Error:', err);
 		const message = err instanceof Error ? err.message : "Fetch failed";
 		return NextResponse.json({ error: message }, { status: 502 });
 	}

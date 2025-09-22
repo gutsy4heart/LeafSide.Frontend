@@ -11,6 +11,7 @@ type UserInfo = {
   countryCode?: string;
   gender?: string;
   roles?: string[];
+  role?: string;
   createdAt?: string;
   exp?: number;
 };
@@ -39,7 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuth = () => {
     setTokenState(null);
     setUserInfo(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try { 
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('leafside_registration_data');
+    } catch {}
   };
 
   // Функция для загрузки профиля пользователя с бэкенда
@@ -87,6 +91,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Функция для получения данных регистрации из localStorage
+  const getRegistrationData = (): UserInfo | null => {
+    try {
+      const data = localStorage.getItem('leafside_registration_data');
+      if (data) {
+        const registrationData = JSON.parse(data);
+        console.log('AuthContext - Found registration data:', registrationData);
+        return {
+          email: registrationData.email,
+          firstName: registrationData.firstName,
+          lastName: registrationData.lastName,
+          phoneNumber: registrationData.phoneNumber,
+          countryCode: registrationData.countryCode,
+          gender: registrationData.gender,
+          name: `${registrationData.firstName} ${registrationData.lastName}`.trim()
+        };
+      }
+    } catch (error) {
+      console.log('AuthContext - Error parsing registration data:', error);
+    }
+    return null;
+  };
+
   // Проверка истечения срока действия токена (exp)
   const isTokenExpired = (t: string): boolean => {
     try {
@@ -132,6 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         countryCode: payload.countryCode,
         gender: payload.gender,
         roles: userRoles,
+        role: userRoles[0] || payload.role,
         createdAt: payload.createdAt,
         exp: payload.exp,
       };
@@ -208,10 +236,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (userProfile) {
           console.log('AuthContext - Fetched user profile from server:', userProfile);
           setUserInfo(userProfile);
+        } else {
+          // Если профиль с сервера недоступен, попробуем использовать данные регистрации
+          const registrationData = getRegistrationData();
+          if (registrationData && registrationData.email === user?.email) {
+            console.log('AuthContext - Using registration data as fallback:', registrationData);
+            setUserInfo({
+              ...user,
+              ...registrationData
+            });
+            // Очищаем данные регистрации после использования
+            localStorage.removeItem('leafside_registration_data');
+          }
         }
       } catch (error) {
         console.log('AuthContext - Failed to fetch user profile, using token data:', error);
-        // Не очищаем авторизацию, если не удалось получить профиль
+        // Если профиль с сервера недоступен, попробуем использовать данные регистрации
+        const registrationData = getRegistrationData();
+        if (registrationData && registrationData.email === user?.email) {
+          console.log('AuthContext - Using registration data as fallback after error:', registrationData);
+          setUserInfo({
+            ...user,
+            ...registrationData
+          });
+          // Очищаем данные регистрации после использования
+          localStorage.removeItem('leafside_registration_data');
+        }
       }
     } else {
       console.log('AuthContext - Clearing auth (no token)');
@@ -270,11 +320,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const isAdmin = useMemo(() => {
-    const hasAdminRole = userInfo?.roles?.includes("Admin") || false;
+    // Проверяем роль в массиве roles или в поле role из JWT токена
+    const hasAdminRole = userInfo?.roles?.includes("Admin") || 
+                        userInfo?.roles?.includes("admin") ||
+                        userInfo?.role === "Admin" ||
+                        userInfo?.role === "admin" ||
+                        false;
     console.log('Auth Context - User roles:', userInfo?.roles);
+    console.log('Auth Context - User role:', userInfo?.role);
     console.log('Auth Context - Is admin:', hasAdminRole);
     return hasAdminRole;
-  }, [userInfo?.roles]);
+  }, [userInfo?.roles, userInfo?.role]);
 
   const value = useMemo<AuthContextType>(() => {
     // Простая проверка - если есть токен и не загружается, то авторизован

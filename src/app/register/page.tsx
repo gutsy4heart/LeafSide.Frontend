@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CountrySelect from "../components/CountrySelect";
+import { useAuth } from "../auth-context";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { setToken } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -63,13 +65,13 @@ export default function RegisterPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: email,
-          password: password,
-          firstName: firstName,
-          lastName: lastName,
-          phoneNumber: phoneNumber,
-          countryCode: countryCode,
-          gender: gender
+          Email: email,
+          Password: password,
+          FirstName: firstName,
+          LastName: lastName,
+          PhoneNumber: phoneNumber,
+          CountryCode: countryCode,
+          Gender: gender
         })
       });
       
@@ -88,14 +90,92 @@ export default function RegisterPage() {
       }
       
       setOk(true);
-      // Автоматически перенаправляем на страницу входа через 2 секунды
+      
+      // Store registration data in localStorage for use after login
+      const registrationData = {
+        firstName,
+        lastName,
+        phoneNumber,
+        countryCode,
+        gender,
+        email
+      };
+      localStorage.setItem('leafside_registration_data', JSON.stringify(registrationData));
+      
+      // Automatically log in the user after successful registration
+      try {
+        console.log('Registration successful, attempting to log in...');
+        
+        const loginResponse = await fetch('/api/account/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            Email: email,
+            Password: password
+          }),
+        });
+        
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json();
+          console.log('Auto-login successful:', loginData);
+          
+          if (loginData.token) {
+            // Set the token in auth context
+            await setToken(loginData.token);
+            
+            // Try to update the profile with the registration data
+            const profileUpdateResponse = await fetch('/api/account/profile', {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${loginData.token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                FirstName: firstName,
+                LastName: lastName,
+                PhoneNumber: phoneNumber,
+                CountryCode: countryCode,
+                Gender: gender
+              }),
+            });
+            
+            if (profileUpdateResponse.ok) {
+              console.log('Profile updated successfully after registration');
+            } else {
+              console.log('Failed to update profile after registration, will use localStorage fallback');
+            }
+            
+            // Redirect to profile page
+            setTimeout(() => {
+              router.push("/profile");
+            }, 1000);
+            return;
+          }
+        } else {
+          console.log('Auto-login failed, will redirect to login page');
+        }
+      } catch (error) {
+        console.log('Error during auto-login:', error);
+      }
+      
+      // Fallback: redirect to login page if auto-login fails
       setTimeout(() => {
         router.push("/login");
       }, 2000);
       
     } catch (err: any) {
       console.error("Ошибка регистрации:", err);
-      setError(err?.message ?? "Произошла ошибка при регистрации. Проверьте данные и попробуйте снова.");
+      
+      // Handle specific error types
+      if (err?.message === "Backend unreachable") {
+        setError("Сервер недоступен. Убедитесь, что бэкенд запущен и попробуйте снова.");
+      } else if (err?.message?.includes("fetch")) {
+        setError("Ошибка сети. Проверьте подключение к интернету и попробуйте снова.");
+      } else {
+        setError(err?.message ?? "Произошла ошибка при регистрации. Проверьте данные и попробуйте снова.");
+      }
     } finally {
       setLoading(false);
     }
@@ -404,11 +484,23 @@ export default function RegisterPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <div>
+                <div className="flex-1">
                   <h3 className="text-sm font-semibold text-red-500 mb-1">
                     Ошибка регистрации
                   </h3>
-                  <p className="text-sm text-red-400">{error}</p>
+                  <p className="text-sm text-red-400 mb-3">{error}</p>
+                  {error.includes("Сервер недоступен") && (
+                    <button
+                      onClick={() => {
+                        setError("");
+                        onSubmit({} as React.FormEvent);
+                      }}
+                      disabled={loading}
+                      className="px-3 py-1.5 text-xs font-medium text-red-500 bg-red-500/10 border border-red-500/20 rounded-md hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 transition-colors"
+                    >
+                      {loading ? "Попытка..." : "Попробовать снова"}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

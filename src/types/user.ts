@@ -6,7 +6,13 @@ export enum UserRole {
 export interface UserWithRole {
   id: string;
   email: string;
-  userName: string;
+  userName?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  countryCode?: string;
+  gender?: string;
+  role?: string;
   roles: string[];
   createdAt: string;
 }

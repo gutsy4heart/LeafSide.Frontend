@@ -164,7 +164,7 @@ export default function AddBookModal({
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)]"
               >
                 {BOOK_GENRES.map(genre => (
-                  <option key={genre} value={genre}>{genre}</option>
+                  <option key={genre} value={genre}>{t(`genres.${genre}`)}</option>
                 ))}
               </select>
             </div>
@@ -180,7 +180,7 @@ export default function AddBookModal({
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)]"
               >
                 {BOOK_LANGUAGES.map(lang => (
-                  <option key={lang} value={lang}>{lang}</option>
+                  <option key={lang} value={lang}>{t(`languages.${lang}`)}</option>
                 ))}
               </select>
             </div>

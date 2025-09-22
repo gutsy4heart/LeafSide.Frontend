@@ -1,10 +1,12 @@
 import { useLanguage } from '../app/language-context';
 import ruMessages from '../messages/ru.json';
 import enMessages from '../messages/en.json';
+import plMessages from '../messages/pl.json';
 
 const messages = {
   ru: ruMessages,
   en: enMessages,
+  pl: plMessages,
 };
 
 export function useTranslations() {
@@ -19,7 +21,9 @@ export function useTranslations() {
     }
     
     if (typeof value !== 'string') {
-      console.warn(`Translation missing for key: ${key}`);
+      console.warn(`Translation missing for key: ${key} in language: ${language}`);
+      console.log('Available keys:', Object.keys(messages[language] || {}));
+      console.log('Trying to access:', keys);
       return key;
     }
     

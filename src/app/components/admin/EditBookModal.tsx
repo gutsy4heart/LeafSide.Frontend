@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "../../../lib/translations";
 import { Book, UpdateBookRequest, BOOK_GENRES, BOOK_LANGUAGES } from "../../../types/book";
 
 interface EditBookModalProps {
@@ -20,6 +21,7 @@ export default function EditBookModal({
   updating, 
   errors 
 }: EditBookModalProps) {
+  const { t } = useTranslations();
   const [formData, setFormData] = useState<UpdateBookRequest>({
     title: '',
     author: '',
@@ -73,7 +75,7 @@ export default function EditBookModal({
       <div className="bg-[var(--card)] border border-white/10 rounded-lg p-4 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4 sm:mb-6">
           <h3 className="text-lg sm:text-xl font-semibold text-[var(--foreground)]">
-            Редактировать книгу
+            {t('admin.modals.editBook.title')}
           </h3>
           <button
             onClick={onClose}
@@ -89,7 +91,7 @@ export default function EditBookModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Название *
+                {t('admin.modals.editBook.bookTitle')} *
               </label>
               <input
                 type="text"
@@ -99,7 +101,7 @@ export default function EditBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.title ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="Название книги"
+                placeholder={t('admin.modals.editBook.titlePlaceholder')}
                 required
               />
               {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title}</p>}
@@ -107,7 +109,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Автор *
+                {t('admin.modals.editBook.author')} *
               </label>
               <input
                 type="text"
@@ -117,7 +119,7 @@ export default function EditBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.author ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="Автор книги"
+                placeholder={t('admin.modals.editBook.authorPlaceholder')}
                 required
               />
               {errors.author && <p className="text-red-400 text-xs mt-1">{errors.author}</p>}
@@ -125,7 +127,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                ISBN *
+                {t('admin.modals.editBook.isbn')} *
               </label>
               <input
                 type="text"
@@ -135,7 +137,7 @@ export default function EditBookModal({
                 className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)] ${
                   errors.isbn ? 'border-red-500' : 'border-white/20'
                 }`}
-                placeholder="ISBN"
+                placeholder={t('admin.modals.editBook.isbnPlaceholder')}
                 required
               />
               {errors.isbn && <p className="text-red-400 text-xs mt-1">{errors.isbn}</p>}
@@ -143,7 +145,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Жанр *
+                {t('admin.modals.editBook.genre')} *
               </label>
               <select
                 name="genre"
@@ -152,14 +154,14 @@ export default function EditBookModal({
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)]"
               >
                 {BOOK_GENRES.map(genre => (
-                  <option key={genre} value={genre}>{genre}</option>
+                  <option key={genre} value={genre}>{t(`genres.${genre}`)}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Язык *
+                {t('admin.modals.editBook.language')} *
               </label>
               <select
                 name="language"
@@ -168,14 +170,14 @@ export default function EditBookModal({
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)]"
               >
                 {BOOK_LANGUAGES.map(lang => (
-                  <option key={lang} value={lang}>{lang}</option>
+                  <option key={lang} value={lang}>{t(`languages.${lang}`)}</option>
                 ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Год издания *
+                {t('admin.modals.editBook.publishedYear')} *
               </label>
               <input
                 type="number"
@@ -194,7 +196,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Количество страниц *
+                {t('admin.modals.editBook.pageCount')} *
               </label>
               <input
                 type="number"
@@ -212,7 +214,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                Цена (€) *
+                {t('admin.modals.editBook.price')} *
               </label>
               <input
                 type="number"
@@ -231,7 +233,7 @@ export default function EditBookModal({
 
             <div>
               <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-                URL изображения
+                {t('admin.modals.editBook.imageUrl')}
               </label>
               <input
                 type="url"
@@ -239,7 +241,7 @@ export default function EditBookModal({
                 value={formData.imageUrl}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)]"
-                placeholder="https://example.com/image.jpg"
+                placeholder={t('admin.modals.editBook.imageUrlPlaceholder')}
               />
             </div>
 
@@ -252,21 +254,21 @@ export default function EditBookModal({
                 className="h-4 w-4 text-[var(--accent)] focus:ring-[var(--accent)] border-white/20 rounded bg-[var(--card)]"
               />
               <label className="ml-2 block text-sm text-[var(--muted)]">
-                Доступна для заказа
+                {t('admin.modals.editBook.available')}
               </label>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[var(--muted)] mb-1">
-              Описание
+              {t('admin.modals.editBook.description')}
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               className="w-full px-3 py-2 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)] bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted)]"
-              placeholder="Описание книги"
+              placeholder={t('admin.modals.editBook.descriptionPlaceholder')}
               rows={4}
             />
           </div>
@@ -277,14 +279,14 @@ export default function EditBookModal({
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-[var(--muted)] bg-[var(--card)] border border-white/20 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] transition-colors"
             >
-              Отмена
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={updating}
               className="px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] bg-[var(--accent)] border border-transparent rounded-lg hover:bg-[var(--accent)]/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
             >
-              {updating ? 'Сохранение...' : 'Сохранить изменения'}
+              {updating ? t('admin.modals.editBook.saving') : t('admin.modals.editBook.save')}
             </button>
           </div>
         </form>

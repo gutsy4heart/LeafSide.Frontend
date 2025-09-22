@@ -4,6 +4,7 @@ import { useAuth } from "../auth-context";
 import { useTranslations } from "../../lib/translations";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import CountrySelect from "../components/CountrySelect";
 import OrdersList from "../components/OrdersList";
 
 export default function ProfilePage() {
@@ -70,13 +71,32 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json();
         console.log('Profile page - Raw profile data:', data);
-        setProfileData({
+        console.log('Profile page - Data properties check:', {
+          'data.firstName': data.firstName,
+          'data.FirstName': data.FirstName,
+          'data.lastName': data.lastName,
+          'data.LastName': data.LastName,
+          'data.phoneNumber': data.phoneNumber,
+          'data.PhoneNumber': data.PhoneNumber,
+          'data.countryCode': data.countryCode,
+          'data.CountryCode': data.CountryCode,
+          'data.gender': data.gender,
+          'data.Gender': data.Gender,
+          'userInfo?.firstName': userInfo?.firstName,
+          'userInfo?.lastName': userInfo?.lastName,
+          'userInfo?.phoneNumber': userInfo?.phoneNumber
+        });
+        
+        const profileData = {
           firstName: data.firstName || data.FirstName || userInfo?.firstName || '',
           lastName: data.lastName || data.LastName || userInfo?.lastName || '',
           phoneNumber: data.phoneNumber || data.PhoneNumber || userInfo?.phoneNumber || '',
           countryCode: data.countryCode || data.CountryCode || userInfo?.countryCode || '+7',
           gender: data.gender || data.Gender || userInfo?.gender || 'Male'
-        });
+        };
+        
+        console.log('Profile page - Final profile data:', profileData);
+        setProfileData(profileData);
       } else if (response.status === 401) {
         console.error('Profile page - Unauthorized (401) when loading profile');
         // Если 401, пытаемся обновить токен
@@ -263,6 +283,12 @@ export default function ProfilePage() {
       }
   };
 
+  // Функция для принудительного обновления профиля
+  const refreshProfile = async () => {
+    console.log('Profile page - Manual refresh triggered');
+    await fetchUserProfile();
+  };
+
   // Функция для обновления профиля
   const updateProfile = async () => {
     if (!token) return;
@@ -320,6 +346,25 @@ export default function ProfilePage() {
           console.log('Profile page - Non-JSON response, but status OK');
           setIsEditing(false);
           alert('Профиль успешно обновлен!');
+        }
+        
+        // Обновляем профиль после успешного сохранения
+        console.log('Profile page - Refreshing profile after update');
+        await fetchUserProfile();
+        
+        // Обновляем userInfo в контексте после успешного обновления
+        if (userInfo) {
+          const updatedUserInfo = {
+            ...userInfo,
+            firstName: profileData.firstName,
+            lastName: profileData.lastName,
+            phoneNumber: profileData.phoneNumber,
+            countryCode: profileData.countryCode,
+            gender: profileData.gender,
+            name: `${profileData.firstName} ${profileData.lastName}`.trim()
+          };
+          // Обновляем userInfo в контексте (это потребует доступа к setUserInfo из контекста)
+          console.log('Profile page - Updated userInfo:', updatedUserInfo);
         }
       } else {
         const contentType = response.headers.get('content-type');
@@ -408,11 +453,11 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <h1 className="text-2xl font-bold text-white mb-4">{t('profile.loadingProfile')}</h1>
-          <p className="text-gray-300">{t('profile.gettingData')}</p>
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-4">{t('profile.loadingProfile')}</h1>
+          <p className="text-[var(--muted)]">{t('profile.gettingData')}</p>
         </div>
       </div>
     );
@@ -423,7 +468,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+    <div className="min-h-screen bg-[var(--background)]">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Заголовок */}
         <div className="mb-8 text-center">
@@ -432,10 +477,10 @@ export default function ProfilePage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-[var(--foreground)] mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             {t('profile.myProfile')}
           </h1>
-          <p className="text-slate-300 text-lg">{t('profile.welcomeMessage')}</p>
+          <p className="text-[var(--muted)] text-lg">{t('profile.welcomeMessage')}</p>
         </div>
 
         <div className="grid gap-8 grid-cols-1 lg:grid-cols-4">
@@ -564,15 +609,27 @@ export default function ProfilePage() {
                       <span className="text-2xl">👤</span>
                       {t('profile.personalInfo')}
                     </h2>
-                    <button
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      {isEditing ? t('profile.cancel') : t('profile.edit')}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={refreshProfile}
+                        disabled={profileLoading}
+                        className="px-3 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-500/50 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <svg className={`w-4 h-4 ${profileLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        {profileLoading ? t('profile.loading') : t('profile.refresh')}
+                      </button>
+                      <button
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        {isEditing ? t('profile.cancel') : t('profile.edit')}
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -626,23 +683,20 @@ export default function ProfilePage() {
                             {t('profile.phoneNumber')}
                           </label>
                           {isEditing ? (
-                            <div className="flex">
-                              <select
-                                value={profileData.countryCode}
-                                onChange={(e) => setProfileData({...profileData, countryCode: e.target.value})}
-                                className="px-3 py-2 bg-[var(--card)] border border-white/20 rounded-l-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="+7">+7</option>
-                                <option value="+1">+1</option>
-                                <option value="+44">+44</option>
-                                <option value="+49">+49</option>
-                                <option value="+33">+33</option>
-                              </select>
+                            <div className="flex gap-2">
+                              <div className="w-40">
+                                <CountrySelect
+                                  value={profileData.countryCode}
+                                  onChange={(code, phone) => {
+                                    setProfileData(prev => ({ ...prev, countryCode: code }));
+                                  }}
+                                />
+                              </div>
                               <input
                                 type="tel"
                                 value={profileData.phoneNumber}
                                 onChange={(e) => setProfileData({...profileData, phoneNumber: e.target.value})}
-                                className="flex-1 px-3 py-2 bg-[var(--card)] border border-white/20 rounded-r-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="flex-1 px-3 py-2 bg-[var(--card)] border border-white/20 rounded-lg text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="1234567890"
                               />
                             </div>
@@ -782,6 +836,56 @@ export default function ProfilePage() {
                       >
                         {t('profile.tryAgain')}
                       </button>
+                    </div>
+                  )}
+                  
+                  {/* Quick Profile Data Fix */}
+                  {(!profileData.firstName || !profileData.lastName || !profileData.phoneNumber) && (
+                    <div className="mt-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                          <svg className="h-5 w-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm font-semibold text-yellow-500 mb-1">
+                            Отсутствуют данные профиля
+                          </h3>
+                          <p className="text-sm text-yellow-400 mb-3">
+                            Некоторые данные профиля отсутствуют. Это может быть связано с тем, что бэкенд не сохраняет данные при регистрации. Вы можете заполнить их вручную.
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const firstName = prompt("Введите ваше имя:");
+                                const lastName = prompt("Введите вашу фамилию:");
+                                const phoneNumber = prompt("Введите ваш номер телефона:");
+                                if (firstName && lastName && phoneNumber) {
+                                  setProfileData(prev => ({
+                                    ...prev,
+                                    firstName,
+                                    lastName,
+                                    phoneNumber: phoneNumber.replace(/\D/g, ''),
+                                    countryCode: prev.countryCode || '+7'
+                                  }));
+                                  // Try to save to backend
+                                  updateProfile();
+                                }
+                              }}
+                              className="px-3 py-1.5 text-xs font-medium text-yellow-500 bg-yellow-500/10 border border-yellow-500/20 rounded-md hover:bg-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 transition-colors"
+                            >
+                              Быстрое исправление
+                            </button>
+                            <button
+                              onClick={() => setIsEditing(true)}
+                              className="px-3 py-1.5 text-xs font-medium text-blue-500 bg-blue-500/10 border border-blue-500/20 rounded-md hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-colors"
+                            >
+                              Редактировать профиль
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

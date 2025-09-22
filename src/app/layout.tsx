@@ -6,6 +6,7 @@ import { AuthProvider } from "./auth-context";
 import { LanguageProvider } from "./language-context";
 import CartNav from "./CartNav";
 import Footer from "./components/Footer";
+import ClientWrapper from "./components/ClientWrapper";
 import Link from "next/link";
 
 const geistSans = Geist({
@@ -30,7 +31,53 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function removeExtensionAttributes() {
+                  const elements = document.querySelectorAll('[bis_skin_checked], [bis_register]');
+                  elements.forEach(element => {
+                    element.removeAttribute('bis_skin_checked');
+                    element.removeAttribute('bis_register');
+                  });
+                }
+                
+                // Run immediately
+                removeExtensionAttributes();
+                
+                // Set up observer
+                if (typeof MutationObserver !== 'undefined') {
+                  const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                      if (mutation.type === 'attributes') {
+                        const target = mutation.target;
+                        if (target.hasAttribute('bis_skin_checked') || target.hasAttribute('bis_register')) {
+                          target.removeAttribute('bis_skin_checked');
+                          target.removeAttribute('bis_register');
+                        }
+                      }
+                    });
+                  });
+                  
+                  observer.observe(document.documentElement, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true,
+                    attributeFilter: ['bis_skin_checked', 'bis_register']
+                  });
+                }
+                
+                // Periodic cleanup
+                setInterval(removeExtensionAttributes, 50);
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning={true}>
+        <ClientWrapper>
         <LanguageProvider>
         <AuthProvider>
         <CartProvider>
@@ -68,6 +115,7 @@ export default function RootLayout({
         </CartProvider>
         </AuthProvider>
         </LanguageProvider>
+        </ClientWrapper>
       </body>
     </html>
   );
