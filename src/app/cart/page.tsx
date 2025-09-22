@@ -133,9 +133,26 @@ export default function CartPage() {
     <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('cart.title')}</h1>
-          <div className="text-sm text-[var(--muted)]">
-            {t('cart.itemsSummary', { count: getTotalItems(), amount: getTotalPrice().toFixed(2) })}
+          <div>
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('cart.title')}</h1>
+            <p className="text-[var(--muted)] mt-1">
+              {t('cart.itemsSummary', { count: getTotalItems(), amount: getTotalPrice().toFixed(2) })}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-2xl font-bold text-[var(--accent)]">
+                €{getTotalPrice().toFixed(2)}
+              </div>
+              <div className="text-sm text-[var(--muted)]">
+                {getTotalItems()} {t('cart.items')}
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-[var(--accent)]/10 rounded-full flex items-center justify-center">
+              <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m-2.4 0L3 3H1m6 16a2 2 0 104 0 2 2 0 00-4 0m8 0a2 2 0 104 0 2 2 0 00-4 0" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -187,7 +204,7 @@ export default function CartPage() {
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => updateQuantity(item.bookId, item.quantity - 1)}
-                            disabled={cartLoading}
+                            disabled={cartLoading || item.quantity <= 1}
                             className="w-8 h-8 rounded-full bg-[var(--card)] border border-white/20 flex items-center justify-center hover:bg-[var(--accent)]/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

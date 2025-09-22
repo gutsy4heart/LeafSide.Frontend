@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import CountrySelect from "../components/CountrySelect";
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
 
 export default function RegisterPage() {
   const router = useRouter();
   const { setToken } = useAuth();
+  const { t } = useTranslations();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -20,25 +22,25 @@ export default function RegisterPage() {
   const [ok, setOk] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
 
-  // Функция валидации
+  // Validation function
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
     
-    if (!firstName.trim()) errors.firstName = "Имя обязательно";
-    if (!lastName.trim()) errors.lastName = "Фамилия обязательна";
-    if (!email.trim()) errors.email = "Email обязателен";
-    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = "Неверный формат email";
-    if (!phoneNumber.trim()) errors.phoneNumber = "Номер телефона обязателен";
-    else if (!/^\d{10,15}$/.test(phoneNumber.replace(/\D/g, ''))) errors.phoneNumber = "Неверный формат номера";
-    if (!gender) errors.gender = "Выберите пол";
-    if (!password) errors.password = "Пароль обязателен";
-    else if (password.length < 6) errors.password = "Пароль должен содержать минимум 6 символов";
+    if (!firstName.trim()) errors.firstName = t('auth.firstNameRequired');
+    if (!lastName.trim()) errors.lastName = t('auth.lastNameRequired');
+    if (!email.trim()) errors.email = t('auth.emailRequired');
+    else if (!/\S+@\S+\.\S+/.test(email)) errors.email = t('auth.invalidEmail');
+    if (!phoneNumber.trim()) errors.phoneNumber = t('auth.phoneRequired');
+    else if (!/^\d{10,15}$/.test(phoneNumber.replace(/\D/g, ''))) errors.phoneNumber = t('auth.invalidPhone');
+    if (!gender) errors.gender = t('auth.genderRequired');
+    if (!password) errors.password = t('auth.passwordRequired');
+    else if (password.length < 6) errors.password = t('auth.passwordMinLength');
     
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  // Прогресс заполнения формы
+  // Form completion progress
   const getFormProgress = () => {
     const fields = [firstName, lastName, email, phoneNumber, gender, password];
     const filledFields = fields.filter(field => field.trim()).length;
@@ -77,7 +79,7 @@ export default function RegisterPage() {
       
       if (!res.ok) {
         const errorText = await res.text();
-        let errorMessage = "Ошибка регистрации";
+        let errorMessage = t('auth.registerError');
         
         try {
           const errorData = JSON.parse(errorText);
@@ -166,15 +168,15 @@ export default function RegisterPage() {
       }, 2000);
       
     } catch (err: any) {
-      console.error("Ошибка регистрации:", err);
+      console.error("Registration error:", err);
       
       // Handle specific error types
       if (err?.message === "Backend unreachable") {
-        setError("Сервер недоступен. Убедитесь, что бэкенд запущен и попробуйте снова.");
+        setError(t('auth.serverUnavailableDetails'));
       } else if (err?.message?.includes("fetch")) {
-        setError("Ошибка сети. Проверьте подключение к интернету и попробуйте снова.");
+        setError(t('auth.loginErrorDetails'));
       } else {
-        setError(err?.message ?? "Произошла ошибка при регистрации. Проверьте данные и попробуйте снова.");
+        setError(err?.message ?? t('auth.loginErrorDetails'));
       }
     } finally {
       setLoading(false);
@@ -191,16 +193,16 @@ export default function RegisterPage() {
             </svg>
           </div>
           <h1 className="text-4xl font-bold text-[var(--foreground)] mb-3 bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-            Создать аккаунт
+            {t('auth.registerTitle')}
           </h1>
-          <p className="text-[var(--muted)] text-lg">Присоединяйтесь к нашему сообществу читателей</p>
+          <p className="text-[var(--muted)] text-lg">{t('auth.welcome')}</p>
         </div>
         
         <form onSubmit={onSubmit} className="space-y-6 card p-6">
-          {/* Прогресс-бар */}
+          {/* Progress bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--muted)]">Прогресс заполнения</span>
+              <span className="text-[var(--muted)]">{t('auth.progress')}</span>
               <span className="text-[var(--foreground)] font-medium">{getFormProgress()}%</span>
             </div>
             <div className="w-full bg-white/10 rounded-full h-2">
@@ -211,21 +213,21 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Личная информация */}
+          {/* Personal information */}
           <div className="space-y-4">
             <div className="border-b border-white/10 pb-3">
               <h3 className="text-base font-semibold text-[var(--foreground)] flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Личная информация
+{t('auth.personalInfo')}
               </h3>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="firstName" className="block text-sm font-medium text-[var(--foreground)]">
-                  Имя <span className="text-red-500">*</span>
+                  {t('auth.firstName')} <span className="text-red-500">*</span>
                 </label>
                 <input 
                   id="firstName"
@@ -234,7 +236,7 @@ export default function RegisterPage() {
                       ? 'border-red-500 focus:ring-red-500' 
                       : 'border-white/20'
                   }`}
-                  placeholder="Введите имя" 
+                  placeholder={t('auth.firstNamePlaceholder')} 
                   type="text" 
                   value={firstName} 
                   onChange={(e) => setFirstName(e.target.value)} 
@@ -253,7 +255,7 @@ export default function RegisterPage() {
               
               <div className="space-y-2">
                 <label htmlFor="lastName" className="block text-sm font-medium text-[var(--foreground)]">
-                  Фамилия <span className="text-red-500">*</span>
+                  {t('auth.lastName')} <span className="text-red-500">*</span>
                 </label>
                 <input 
                   id="lastName"
@@ -262,7 +264,7 @@ export default function RegisterPage() {
                       ? 'border-red-500 focus:ring-red-500' 
                       : 'border-white/20'
                   }`}
-                  placeholder="Введите фамилию" 
+                  placeholder={t('auth.lastNamePlaceholder')} 
                   type="text" 
                   value={lastName} 
                   onChange={(e) => setLastName(e.target.value)} 
@@ -282,7 +284,7 @@ export default function RegisterPage() {
 
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium text-[var(--foreground)]">
-                Email <span className="text-red-500">*</span>
+                {t('auth.email')} <span className="text-red-500">*</span>
               </label>
               <input 
                 id="email"
@@ -291,7 +293,7 @@ export default function RegisterPage() {
                     ? 'border-red-500 focus:ring-red-500' 
                     : 'border-white/20'
                 }`}
-                placeholder="example@email.com" 
+                placeholder={t('auth.emailPlaceholder')} 
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
@@ -309,20 +311,20 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Контактная информация */}
+          {/* Contact information */}
           <div className="space-y-4">
             <div className="border-b border-white/10 pb-3">
               <h3 className="text-base font-semibold text-[var(--foreground)] flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                Контактная информация
+                {t('auth.contactInfo')}
               </h3>
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                Номер телефона <span className="text-red-500">*</span>
+                {t('auth.phone')} <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2">
                 <div className="w-40">
@@ -341,7 +343,7 @@ export default function RegisterPage() {
                       ? 'border-red-500 focus:ring-red-500' 
                       : 'border-white/20'
                   }`}
-                  placeholder="Номер телефона" 
+                  placeholder={t('auth.phonePlaceholder')} 
                   type="tel" 
                   value={phoneNumber} 
                   onChange={(e) => setPhoneNumber(e.target.value)} 
@@ -361,20 +363,20 @@ export default function RegisterPage() {
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  Выбранный код страны: <span className="font-medium text-[var(--foreground)]">{phoneCode}</span>
+                  {t('auth.selectedCountryCode')}: <span className="font-medium text-[var(--foreground)]">{phoneCode}</span>
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-[var(--foreground)]">
-                Пол <span className="text-red-500">*</span>
+                {t('auth.gender')} <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { value: "Male", label: "Мужской", icon: "👨" },
-                  { value: "Female", label: "Женский", icon: "👩" },
-                  { value: "Other", label: "Другой", icon: "👤" }
+                  { value: "Male", label: t('auth.male'), icon: "👨" },
+                  { value: "Female", label: t('auth.female'), icon: "👩" },
+                  { value: "Other", label: t('auth.other'), icon: "👤" }
                 ].map((option) => (
                   <label key={option.value} className="relative">
                     <input
@@ -412,20 +414,20 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Безопасность */}
+          {/* Security */}
           <div className="space-y-4">
             <div className="border-b border-white/10 pb-3">
               <h3 className="text-base font-semibold text-[var(--foreground)] flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                Безопасность
+                {t('auth.security')}
               </h3>
             </div>
             
             <div className="space-y-2">
               <label htmlFor="password" className="block text-sm font-medium text-[var(--foreground)]">
-                Пароль <span className="text-red-500">*</span>
+                {t('auth.password')} <span className="text-red-500">*</span>
               </label>
               <input 
                 id="password"
@@ -434,7 +436,7 @@ export default function RegisterPage() {
                     ? 'border-red-500 focus:ring-red-500' 
                     : 'border-white/20'
                 }`}
-                placeholder="Минимум 6 символов" 
+                placeholder={t('auth.passwordPlaceholder')} 
                 type="password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
@@ -461,16 +463,16 @@ export default function RegisterPage() {
                       ></div>
                     </div>
                     <span className="text-xs text-[var(--muted)]">
-                      {password.length >= 8 ? 'Сильный' : password.length >= 6 ? 'Средний' : 'Слабый'}
+                      {password.length >= 8 ? t('auth.passwordStrength.strong') : password.length >= 6 ? t('auth.passwordStrength.medium') : t('auth.passwordStrength.weak')}
                     </span>
                   </div>
                   <p className="text-xs text-[var(--muted)]">
-                    Пароль должен содержать минимум 6 символов
+                    {t('auth.passwordMinLength')}
                   </p>
                 </div>
               ) : (
                 <p className="text-xs text-[var(--muted)]">
-                  Пароль должен содержать минимум 6 символов
+                  {t('auth.passwordMinLength')}
                 </p>
               )}
             </div>
@@ -486,10 +488,10 @@ export default function RegisterPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-red-500 mb-1">
-                    Ошибка регистрации
+                    {t('auth.registerError')}
                   </h3>
                   <p className="text-sm text-red-400 mb-3">{error}</p>
-                  {error.includes("Сервер недоступен") && (
+                  {error.includes(t('auth.serverUnavailableDetails')) && (
                     <button
                       onClick={() => {
                         setError("");
@@ -498,7 +500,7 @@ export default function RegisterPage() {
                       disabled={loading}
                       className="px-3 py-1.5 text-xs font-medium text-red-500 bg-red-500/10 border border-red-500/20 rounded-md hover:bg-red-500/20 focus:outline-none focus:ring-2 focus:ring-red-500/50 disabled:opacity-50 transition-colors"
                     >
-                      {loading ? "Попытка..." : "Попробовать снова"}
+                      {loading ? t('auth.attempting') : t('auth.tryAgain')}
                     </button>
                   )}
                 </div>
@@ -516,15 +518,15 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="text-sm font-semibold text-green-500 mb-1">
-                    Регистрация успешна!
+                    {t('auth.registerSuccess')}
                   </h3>
-                  <p className="text-sm text-green-400">Аккаунт создан. Перенаправляем на страницу входа...</p>
+                  <p className="text-sm text-green-400">{t('auth.accountCreated')}</p>
                 </div>
               </div>
             </div>
           )}
           
-          {/* Кнопка регистрации */}
+          {/* Registration button */}
           <div className="pt-2">
             <button 
               type="submit" 
@@ -537,14 +539,14 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>Создание аккаунта...</span>
+                  <span>{t('auth.creatingAccount')}</span>
                 </>
               ) : (
                 <>
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                   </svg>
-                  <span>Создать аккаунт</span>
+                  <span>{t('auth.createAccount')}</span>
                 </>
               )}
             </button>
@@ -552,12 +554,12 @@ export default function RegisterPage() {
           
           <div className="text-center">
             <p className="text-sm text-[var(--muted)]">
-              Уже есть аккаунт?{" "}
+              {t('auth.alreadyHaveAccount')}{" "}
               <a 
                 className="text-blue-600 hover:text-blue-500 font-medium transition-colors" 
                 href="/login"
               >
-                Войти
+                {t('auth.loginHere')}
               </a>
             </p>
           </div>

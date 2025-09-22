@@ -95,7 +95,6 @@ export default function CountrySelect({ value, onChange, disabled = false }: Cou
            country.phoneCode.includes(searchTerm);
   });
 
-  // Debug logging
   console.log('CountrySelect - Total countries:', countries.length);
   console.log('CountrySelect - Filtered countries:', filteredCountries.length);
   console.log('CountrySelect - Search term:', searchTerm);

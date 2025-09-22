@@ -45,7 +45,7 @@ export default function Home() {
             <p className="mt-3 text-[var(--muted)]">{t('home.subtitle')}</p>
             <div className="mt-6 flex items-center gap-3">
               <a href="#catalog" className="btn-accent">{t('home.viewCatalog')}</a>
-              <a href="#" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">{t('home.learnMore')}</a>
+              <a href="/about" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">{t('home.learnMore')}</a>
             </div>
           </div>
         </div>

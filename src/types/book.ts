@@ -11,6 +11,7 @@ export interface Book {
   price: number;
   imageUrl?: string;
   isAvailable: boolean;
+  publishing?: string;
   createdAt: string;
   updatedAt: string;
 }

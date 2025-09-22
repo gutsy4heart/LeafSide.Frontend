@@ -9,6 +9,42 @@ const messages = {
   pl: plMessages,
 };
 
+// Helper function to get the correct plural form for Russian
+function getRussianPluralForm(count: number, forms: { one?: string; few?: string; many?: string; other?: string }): string {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  if (lastDigit === 1 && lastTwoDigits !== 11) {
+    return forms.one || forms.other || '';
+  }
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits >= 20)) {
+    return forms.few || forms.other || '';
+  }
+  return forms.many || forms.other || '';
+}
+
+// Helper function to get the correct plural form for Polish
+function getPolishPluralForm(count: number, forms: { one?: string; few?: string; many?: string; other?: string }): string {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  if (count === 1) {
+    return forms.one || forms.other || '';
+  }
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits >= 20)) {
+    return forms.few || forms.other || '';
+  }
+  return forms.many || forms.other || '';
+}
+
+// Helper function to get the correct plural form for English
+function getEnglishPluralForm(count: number, forms: { one?: string; other?: string }): string {
+  if (count === 1) {
+    return forms.one || forms.other || '';
+  }
+  return forms.other || forms.one || '';
+}
+
 export function useTranslations() {
   const { language } = useLanguage();
   
@@ -27,14 +63,46 @@ export function useTranslations() {
       return key;
     }
     
-    // Replace parameters in the translation
+    let translated = value;
+    
+    // First, replace simple parameters like {amount}
     if (params) {
-      return value.replace(/\{(\w+)\}/g, (match, paramKey) => {
-        return params[paramKey]?.toString() || match;
-      });
+      for (const paramKey in params) {
+        translated = translated.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(params[paramKey]));
+      }
     }
     
-    return value;
+    // Then, handle pluralization patterns like {count, plural, one {form1} few {form2} ...}
+    const pluralPatternRegex = /\{(\w+),\s*plural,\s*(.+?)\}/g;
+    let match;
+    
+    while ((match = pluralPatternRegex.exec(translated)) !== null) {
+      const variableName = match[1]; // e.g., 'count'
+      const formsString = match[2]; // e.g., 'one {товар} few {товара} many {товаров} other {товаров}'
+      
+      const count = params && params[variableName] !== undefined ? Number(params[variableName]) : 0;
+      
+      const forms: { [k: string]: string } = {};
+      const formParts = formsString.matchAll(/(\w+)\s*\{([^}]+)\}/g);
+      for (const part of formParts) {
+        forms[part[1]] = part[2];
+      }
+      
+      let selectedForm = forms.other || ''; // Default fallback
+      
+      if (language === 'ru') {
+        selectedForm = getRussianPluralForm(count, forms);
+      } else if (language === 'pl') {
+        selectedForm = getPolishPluralForm(count, forms);
+      } else if (language === 'en') {
+        selectedForm = getEnglishPluralForm(count, forms);
+      }
+      
+      // Replace the entire pluralization pattern with the selected form
+      translated = translated.replace(match[0], selectedForm);
+    }
+    
+    return translated;
   };
   
   return { t, language };

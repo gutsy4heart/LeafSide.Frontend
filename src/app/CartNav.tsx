@@ -15,11 +15,16 @@ export default function CartNav() {
       <a href="/" className="hover:text-[var(--foreground)] transition-colors">{t('navigation.catalog')}</a>
       <a href="/about" className="hover:text-[var(--foreground)] transition-colors">{t('navigation.about')}</a>
       <a href="/contact" className="hover:text-[var(--foreground)] transition-colors">{t('navigation.contacts')}</a>
-      <a href="/cart" className="btn-accent flex items-center gap-2">
+      <a href="/cart" className="btn-accent flex items-center gap-2 relative">
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m-2.4 0L3 3H1m6 16a2 2 0 104 0 2 2 0 00-4 0m8 0a2 2 0 104 0 2 2 0 00-4 0" />
         </svg>
-        {t('navigation.cart')} ({count})
+        {t('navigation.cart')}
+        {count > 0 && (
+          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+            {count}
+          </span>
+        )}
       </a>
       <LanguageSwitcher />
       {isAuthenticated ? (
