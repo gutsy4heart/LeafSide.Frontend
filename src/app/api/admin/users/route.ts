@@ -9,9 +9,9 @@ export async function GET(request: NextRequest) {
     }
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';
-    console.log('Admin Users API - Fetching users from backend:', `${backendUrl}/api/AdminUsers/users`);
+    console.log('Admin Users API - Fetching users from backend:', `${backendUrl}/api/admin/users`);
     
-    const response = await fetch(`${backendUrl}/api/AdminUsers/users`, {
+    const response = await fetch(`${backendUrl}/api/admin/users`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';
     console.log('Admin Users API - Backend URL:', backendUrl);
     
-    const response = await fetch(`${backendUrl}/api/AdminUsers/users`, {
+    const response = await fetch(`${backendUrl}/api/admin/users`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,

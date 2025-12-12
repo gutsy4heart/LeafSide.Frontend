@@ -15,7 +15,7 @@ export async function PUT(
     const body = await request.json();
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';
-    const response = await fetch(`${backendUrl}/api/AdminUsers/users/${userId}/role`, {
+    const response = await fetch(`${backendUrl}/api/admin/users/${userId}/role`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
