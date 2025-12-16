@@ -8,6 +8,8 @@ import { UserWithRole, UserRole, UpdateUserRoleRequest } from "../../types/user"
 import { Book, CreateBookRequest, UpdateBookRequest, BOOK_GENRES, BOOK_LANGUAGES } from "../../types/book";
 import { Order, OrderStatus, ORDER_STATUSES } from "../../types/order";
 import { AdminCart } from "../../types/cart";
+import { Review } from "../../types/review";
+import ReviewManagement from "../components/admin/ReviewManagement";
 
 // Импорт компонентов
 import Toast from "../components/admin/Toast";
@@ -80,7 +82,7 @@ export default function AdminPage() {
   const [books, setBooks] = useState<Book[]>([]);
   const [booksLoading, setBooksLoading] = useState(false);
   const [booksError, setBooksError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'users' | 'books' | 'orders' | 'carts'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'books' | 'orders' | 'carts' | 'reviews'>('users');
   const [showAddBookForm, setShowAddBookForm] = useState(false);
   const [showEditBookForm, setShowEditBookForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
@@ -126,6 +128,11 @@ export default function AdminPage() {
   const [carts, setCarts] = useState<AdminCart[]>([]);
   const [cartsLoading, setCartsLoading] = useState(false);
   const [cartsError, setCartsError] = useState<string | null>(null);
+  
+  // Состояние для отзывов
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState<string | null>(null);
 
   // Состояние для валидации
   const [newBookErrors, setNewBookErrors] = useState<Record<string, string>>({});
@@ -342,12 +349,97 @@ export default function AdminPage() {
     }
   };
 
+  const fetchReviews = async () => {
+    if (!token) {
+      setReviewsError('Токен не найден');
+      setReviewsLoading(false);
+      return;
+    }
+
+    try {
+      setReviewsLoading(true);
+      setReviewsError(null);
+      
+      const response = await fetch("/api/reviews/pending", {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке отзывов');
+      }
+      
+      const data = await safeJsonParse(response);
+      setReviews(data);
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setReviewsError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+
+  const handleApproveReview = async (reviewId: string) => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}/approve`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при одобрении отзыва');
+      }
+
+      showToast('Отзыв одобрен', 'success');
+      await fetchReviews();
+    } catch (err) {
+      console.error('Error approving review:', err);
+      showToast(err instanceof Error ? err.message : 'Ошибка при одобрении отзыва', 'error');
+    }
+  };
+
+  const handleRejectReview = async (reviewId: string) => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`/api/reviews/${reviewId}/reject`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await safeJsonParse(response);
+        throw new Error(errorData.error || errorData.message || 'Ошибка при отклонении отзыва');
+      }
+
+      showToast('Отзыв отклонен', 'success');
+      await fetchReviews();
+    } catch (err) {
+      console.error('Error rejecting review:', err);
+      showToast(err instanceof Error ? err.message : 'Ошибка при отклонении отзыва', 'error');
+    }
+  };
+
   // Обработчики событий
   const handleRefresh = () => {
     if (activeTab === 'users') fetchUsers();
     else if (activeTab === 'books') fetchBooks();
     else if (activeTab === 'orders') fetchOrders();
     else if (activeTab === 'carts') fetchCarts();
+    else if (activeTab === 'reviews') fetchReviews();
   };
 
   const handleCheckBackend = async () => {
@@ -771,6 +863,8 @@ export default function AdminPage() {
         fetchOrders();
       } else if (activeTab === 'carts' && carts.length === 0 && users.length > 0) {
         fetchCarts();
+      } else if (activeTab === 'reviews') {
+        fetchReviews();
       }
     }
   }, [activeTab, isAuthenticated, isAdmin, token, users.length]);
@@ -830,6 +924,7 @@ export default function AdminPage() {
         booksCount={books.length}
         ordersCount={orders.length}
         cartsCount={carts.length}
+        reviewsCount={reviews.length}
       />
 
       <Stats
@@ -887,6 +982,16 @@ export default function AdminPage() {
       {activeTab === 'carts' && (
         <CartManagement
           carts={carts}
+        />
+      )}
+
+      {activeTab === 'reviews' && (
+        <ReviewManagement
+          reviews={reviews}
+          loading={reviewsLoading}
+          onApprove={handleApproveReview}
+          onReject={handleRejectReview}
+          onRefresh={fetchReviews}
         />
       )}
 

@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
 import { useEffect } from 'react';
+import { Providers } from "./AppWrapper";
+import Header from "./Header";
+import Footer from "./Footer";
 
-export default function CleanupScript() {
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  // Cleanup script для удаления атрибутов расширений браузера
   useEffect(() => {
     function removeExtensionAttributes() {
       const elements = document.querySelectorAll('[bis_skin_checked], [bis_register]');
@@ -11,13 +15,11 @@ export default function CleanupScript() {
         element.removeAttribute('bis_register');
       });
     }
-    
-    // Run immediately
+
     removeExtensionAttributes();
-    
-    // Set up observer
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
         if (mutation.type === 'attributes') {
           const target = mutation.target as Element;
           if (target.hasAttribute('bis_skin_checked') || target.hasAttribute('bis_register')) {
@@ -27,23 +29,32 @@ export default function CleanupScript() {
         }
       });
     });
-    
+
     observer.observe(document.documentElement, {
       attributes: true,
       childList: true,
       subtree: true,
       attributeFilter: ['bis_skin_checked', 'bis_register']
     });
-    
-    // Periodic cleanup
-    const interval = setInterval(removeExtensionAttributes, 50);
-    
+
+    const interval = setInterval(removeExtensionAttributes, 100);
+
     return () => {
       observer.disconnect();
       clearInterval(interval);
     };
   }, []);
 
-  return null;
+  return (
+    <Providers>
+      <div className="relative overflow-x-hidden">
+        <Header />
+        <main className="container py-8">
+          {children}
+        </main>
+        <Footer />
+      </div>
+    </Providers>
+  );
 }
 
