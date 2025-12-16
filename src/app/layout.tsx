@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "./cart-context";
+import { FavoritesProvider } from "./favorites-context";
 import { AuthProvider } from "./auth-context";
 import { LanguageProvider } from "./language-context";
 import CartNav from "./CartNav";
@@ -38,6 +39,7 @@ export default function RootLayout({
         <LanguageProvider>
         <AuthProvider>
         <CartProvider>
+        <FavoritesProvider>
         <div className="relative overflow-x-hidden">
           <header className="border-b border-white/10">
             <div className="container flex items-center justify-between py-4">
@@ -69,6 +71,7 @@ export default function RootLayout({
 
           <Footer />
         </div>
+        </FavoritesProvider>
         </CartProvider>
         </AuthProvider>
         </LanguageProvider>

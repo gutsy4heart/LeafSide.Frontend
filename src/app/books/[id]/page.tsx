@@ -4,6 +4,7 @@ import type { Book } from "@/types/book";
 import { fetchJson } from "@/lib/api";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
+import FavoriteButton from "../../components/FavoriteButton";
 import Link from "next/link";
 import { useTranslations } from "../../../lib/translations";
 import { useEffect, useState } from "react";
@@ -70,7 +71,10 @@ export default function BookDetails({ params }: Props) {
       
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 items-start">
         <div className="card p-6">
-          <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[var(--card)] mb-4">
+          <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[var(--card)] mb-4 relative">
+            <div className="absolute top-4 right-4 z-10">
+              <FavoriteButton bookId={book.id} size="md" />
+            </div>
             {book.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img 

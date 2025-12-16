@@ -5,6 +5,7 @@ import { useCart } from "../cart-context";
 import { useTranslations } from "../../lib/translations";
 import { useState } from "react";
 import Link from "next/link";
+import FavoriteButton from "./FavoriteButton";
 
 interface BookCardProps {
   book: Book;
@@ -39,12 +40,15 @@ export default function BookCard({ book }: BookCardProps) {
       !book.isAvailable ? 'opacity-75' : ''
     }`}>
       <Link href={`/books/${book.id}`} className="block">
-        <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)] relative">
+        <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)] relative group/image">
           {!book.isAvailable && (
             <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
               {t('book.unavailable')}
             </div>
           )}
+          <div className="absolute top-2 left-2 z-10 opacity-0 group-hover/image:opacity-100 transition-opacity">
+            <FavoriteButton bookId={book.id} size="sm" />
+          </div>
           {book.imageUrl ? (
             <img 
               src={book.imageUrl} 
