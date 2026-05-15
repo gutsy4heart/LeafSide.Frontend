@@ -35,7 +35,7 @@ const STORAGE_KEY = "leafside_auth_token";
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setTokenState] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const clearAuth = () => {
     setTokenState(null);
@@ -333,8 +333,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [userInfo?.roles, userInfo?.role]);
 
   const value = useMemo<AuthContextType>(() => {
-    // Простая проверка - если есть токен и не загружается, то авторизован
-    const authenticated = Boolean(token) && !isLoading;
+    // Авторизация определяется наличием валидного токена; isLoading отвечает
+    // только за инициализацию/догрузку профиля и не должен разлогинивать UI.
+    const authenticated = Boolean(token);
     
     console.log('AuthContext - Computing value:', {
       hasToken: !!token,
@@ -364,5 +365,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
-
 

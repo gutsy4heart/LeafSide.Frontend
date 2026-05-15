@@ -7,15 +7,16 @@ const BASE_URL =
 
 export async function DELETE(
 	request: NextRequest,
-	{ params }: { params: { bookId: string } }
+	{ params }: { params: Promise<{ bookId: string }> }
 ) {
 	try {
+		const { bookId } = await params;
 		const authHeader = request.headers.get("authorization");
 		if (!authHeader) {
 			return NextResponse.json({ error: "Authorization header required" }, { status: 401 });
 		}
 
-		const res = await fetch(`${BASE_URL}/api/Favorites/${params.bookId}`, {
+		const res = await fetch(`${BASE_URL}/api/Favorites/${bookId}`, {
 			method: "DELETE",
 			headers: {
 				"Authorization": authHeader,
@@ -34,4 +35,3 @@ export async function DELETE(
 		return NextResponse.json({ error: message }, { status: 502 });
 	}
 }
-

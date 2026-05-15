@@ -395,16 +395,18 @@ export default function ProfilePage() {
       userInfo: userInfo ? { email: userInfo.email, roles: userInfo.roles } : null
     });
     
-    // Если не авторизован, перенаправляем на логин
-    if (!isAuthenticated) {
-      console.log('Profile page - Not authenticated, redirecting to login');
-      router.push("/login");
-      return;
-    }
-    
     // Если загружается, ждем
     if (isLoading) {
       console.log('Profile page - Still loading auth data, waiting...');
+      return;
+    }
+
+    // Если не авторизован, перенаправляем на логин только после завершения
+    // инициализации AuthProvider. Иначе профиль может редиректнуть раньше,
+    // чем токен будет прочитан из localStorage.
+    if (!isAuthenticated) {
+      console.log('Profile page - Not authenticated, redirecting to login');
+      router.push("/login");
       return;
     }
     

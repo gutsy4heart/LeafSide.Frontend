@@ -36,8 +36,21 @@ export async function POST(req: Request) {
       
       if (!res.ok) {
         const text = await res.text();
-        errors.push({ url, error: `${res.status} ${text}` });
-        continue;
+        let message = res.status === 401 ? "Invalid email or password" : "Login failed";
+        let details: unknown = text;
+
+        try {
+          details = JSON.parse(text);
+
+          if (details && typeof details === "object") {
+            const data = details as { message?: string; Message?: string; error?: string; Error?: string };
+            message = data.message || data.Message || data.error || data.Error || message;
+          }
+        } catch {
+          message = text || message;
+        }
+
+        return NextResponse.json({ error: "Login failed", message, details }, { status: res.status });
       }
       
       const data = await res.json();
@@ -55,5 +68,4 @@ export async function POST(req: Request) {
     tried: errors 
   }, { status: 502 });
 }
-
 

@@ -7,15 +7,16 @@ const BASE_URL =
 
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: { bookId: string } }
+	{ params }: { params: Promise<{ bookId: string }> }
 ) {
 	try {
+		const { bookId } = await params;
 		const authHeader = request.headers.get("authorization");
 		if (!authHeader) {
 			return NextResponse.json({ error: "Authorization header required" }, { status: 401 });
 		}
 
-		const res = await fetch(`${BASE_URL}/api/Favorites/${params.bookId}/check`, {
+		const res = await fetch(`${BASE_URL}/api/Favorites/${bookId}/check`, {
 			method: "GET",
 			headers: {
 				"Authorization": authHeader,
@@ -35,4 +36,3 @@ export async function GET(
 		return NextResponse.json({ error: message }, { status: 502 });
 	}
 }
-

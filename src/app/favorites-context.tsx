@@ -1,9 +1,9 @@
 "use client";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useAuth } from "./auth-context";
 import { Book } from "../types/book";
 
-type Favorite = {
+export type Favorite = {
   id: string;
   bookId: string;
   createdAt: string;
@@ -14,6 +14,7 @@ type FavoritesContextType = {
   favorites: Favorite[];
   add: (bookId: string) => Promise<void>;
   remove: (bookId: string) => Promise<void>;
+  clear: () => Promise<void>;
   isFavorite: (bookId: string) => boolean;
   count: number;
   loading: boolean;
@@ -30,7 +31,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   // Загружаем избранное с сервера
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!token || !isAuthenticated) {
       setFavorites([]);
       return;
@@ -49,7 +50,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data: Favorite[] = await response.json();
         setFavorites(data || []);
       } else if (response.status === 401) {
         setFavorites([]);
@@ -63,12 +64,12 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, isAuthenticated]);
 
   // Загружаем избранное при изменении токена
   useEffect(() => {
     loadFavorites();
-  }, [token, isAuthenticated]);
+  }, [loadFavorites]);
 
   const add = async (bookId: string) => {
     if (!token || !isAuthenticated) {
@@ -92,13 +93,13 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        // Добавляем новое избранное в список
-        setFavorites(prev => [...prev, {
-          id: data.id,
-          bookId: data.bookId,
-          createdAt: data.createdAt
-        }]);
+        const data: Favorite = await response.json();
+        setFavorites(prev => {
+          if (prev.some(fav => fav.bookId === data.bookId)) {
+            return prev;
+          }
+          return [data, ...prev];
+        });
       } else {
         const errorData = await response.json();
         if (response.status === 409) {
@@ -149,6 +150,38 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const clear = async () => {
+    if (!token || !isAuthenticated) {
+      setError('Необходимо войти в систему');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/favorites', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setFavorites([]);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Ошибка очистки избранного');
+      }
+    } catch (err) {
+      setError('Ошибка соединения с сервером');
+      console.error('Favorites clear error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isFavorite = (bookId: string): boolean => {
     return favorites.some(fav => fav.bookId === bookId);
   };
@@ -161,6 +194,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     favorites, 
     add, 
     remove, 
+    clear,
     isFavorite,
     count, 
     loading, 
@@ -176,4 +210,3 @@ export function useFavorites() {
   if (!ctx) throw new Error("useFavorites must be used within FavoritesProvider");
   return ctx;
 }
-

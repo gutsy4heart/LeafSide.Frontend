@@ -3,59 +3,50 @@
 import { useFavorites } from "../favorites-context";
 import { useAuth } from "../auth-context";
 import { useTranslations } from "../../lib/translations";
-import { useEffect, useState } from "react";
-import { Book } from "../../types/book";
-import { fetchJson } from "../../lib/api";
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import FavoriteButton from "../components/FavoriteButton";
 import { useCart } from "../cart-context";
 
 export default function FavoritesPage() {
-  const { favorites, loading: favoritesLoading, error: favoritesError } = useFavorites();
+  const { favorites, loading: favoritesLoading, error: favoritesError, clear } = useFavorites();
   const { isAuthenticated } = useAuth();
   const { t } = useTranslations();
   const { add: addToCart } = useCart();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "title" | "price">("newest");
 
-  // Загружаем данные книг для отображения
-  useEffect(() => {
-    const fetchBooks = async () => {
-      if (!isAuthenticated || favorites.length === 0) {
-        setLoading(false);
-        return;
+  const visibleFavorites = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    const filtered = favorites.filter((favorite) => {
+      const book = favorite.book;
+      if (!book) return false;
+      if (!normalizedQuery) return true;
+
+      return [book.title, book.author, book.genre, book.language]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalizedQuery));
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "title") {
+        return (a.book?.title ?? "").localeCompare(b.book?.title ?? "");
       }
 
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Получаем все книги
-        const allBooks = await fetchJson<Book[]>("/api/books");
-        
-        // Фильтруем только те книги, которые есть в избранном
-        const favoriteBookIds = favorites.map(fav => fav.bookId);
-        const favoriteBooks = allBooks.filter(book => favoriteBookIds.includes(book.id));
-        
-        // Сортируем по дате добавления в избранное (новые первыми)
-        const sortedBooks = favoriteBooks.sort((a, b) => {
-          const aDate = favorites.find(f => f.bookId === a.id)?.createdAt || "";
-          const bDate = favorites.find(f => f.bookId === b.id)?.createdAt || "";
-          return bDate.localeCompare(aDate);
-        });
-        
-        setBooks(sortedBooks);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Ошибка загрузки книг');
-      } finally {
-        setLoading(false);
+      if (sortBy === "price") {
+        return (a.book?.price ?? 0) - (b.book?.price ?? 0);
       }
-    };
 
-    fetchBooks();
-  }, [favorites, isAuthenticated]);
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+  }, [favorites, query, sortBy]);
+
+  const unavailableCount = useMemo(() => {
+    return favorites.filter((favorite) => favorite.book && !favorite.book.isAvailable).length;
+  }, [favorites]);
 
   const handleAddToCart = async (bookId: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -71,20 +62,33 @@ export default function FavoritesPage() {
     }
   };
 
+  const handleClear = async () => {
+    if (!window.confirm(t('favorites.clearConfirm'))) {
+      return;
+    }
+
+    setClearing(true);
+    try {
+      await clear();
+    } finally {
+      setClearing(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">{t('favorites.loginRequired') || 'Необходимо войти'}</h1>
+          <h1 className="text-2xl font-bold mb-4">{t('favorites.loginRequired')}</h1>
           <Link href="/login" className="text-blue-600 hover:underline">
-            {t('common.login') || 'Войти'}
+            {t('navigation.login')}
           </Link>
         </div>
       </div>
     );
   }
 
-  if (loading || favoritesLoading) {
+  if (favoritesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -95,14 +99,14 @@ export default function FavoritesPage() {
     );
   }
 
-  if (error || favoritesError) {
+  if (favoritesError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4 text-red-600">
-            {t('favorites.error') || 'Ошибка'}
+            {t('favorites.error')}
           </h1>
-          <p className="text-[var(--muted)]">{error || favoritesError}</p>
+          <p className="text-[var(--muted)]">{favoritesError}</p>
         </div>
       </div>
     );
@@ -111,19 +115,23 @@ export default function FavoritesPage() {
   if (favorites.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-4">❤️</div>
+        <div className="text-center max-w-md px-4">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10 text-red-400 ring-1 ring-red-500/20">
+            <svg className="h-10 w-10" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+              <path fillRule="evenodd" d="M3.172 5.172a4 4 0 0 1 5.656 0L10 6.343l1.172-1.171a4 4 0 1 1 5.656 5.656L10 17.657l-6.828-6.829a4 4 0 0 1 0-5.656z" clipRule="evenodd" />
+            </svg>
+          </div>
           <h1 className="text-2xl font-bold mb-2">
-            {t('favorites.empty') || 'Избранное пусто'}
+            {t('favorites.empty')}
           </h1>
           <p className="text-[var(--muted)] mb-6">
-            {t('favorites.emptyDescription') || 'Добавьте книги в избранное, чтобы вернуться к ним позже'}
+            {t('favorites.emptyDescription')}
           </p>
           <Link 
             href="/" 
             className="inline-block bg-[var(--accent)] text-white px-6 py-3 rounded-md hover:bg-[var(--accent)]/80 transition-colors"
           >
-            {t('favorites.browseBooks') || 'Просмотреть каталог'}
+            {t('favorites.browseBooks')}
           </Link>
         </div>
       </div>
@@ -133,17 +141,65 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            {t('favorites.title') || 'Избранное'}
-          </h1>
-          <p className="text-[var(--muted)]">
-            {t('favorites.count') || 'Количество'}: {favorites.length}
-          </p>
+        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">
+              {t('favorites.title')}
+            </h1>
+            <div className="flex flex-wrap gap-3 text-sm text-[var(--muted)]">
+              <span>{t('favorites.count')}: {favorites.length}</span>
+              <span>{t('favorites.available')}: {favorites.length - unavailableCount}</span>
+              {unavailableCount > 0 && <span>{t('favorites.unavailable')}: {unavailableCount}</span>}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="relative block">
+              <span className="sr-only">{t('favorites.searchLabel')}</span>
+              <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z" />
+              </svg>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t('favorites.search')}
+                className="h-10 w-full rounded-md border border-white/15 bg-[var(--card)] pl-9 pr-3 text-sm text-[var(--foreground)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-blue-500 sm:w-64"
+              />
+            </label>
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as "newest" | "title" | "price")}
+              className="h-10 rounded-md border border-white/15 bg-[var(--card)] px-3 text-sm text-[var(--foreground)] outline-none transition-colors focus:border-blue-500"
+            >
+              <option value="newest">{t('favorites.sortNewest')}</option>
+              <option value="title">{t('favorites.sortTitle')}</option>
+              <option value="price">{t('favorites.sortPrice')}</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={handleClear}
+              disabled={clearing}
+              className="h-10 rounded-md border border-red-500/40 px-4 text-sm font-medium text-red-400 transition-colors hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {clearing ? t('favorites.clearing') : t('favorites.clear')}
+            </button>
+          </div>
         </div>
 
+        {visibleFavorites.length === 0 ? (
+          <div className="rounded-lg border border-white/10 py-16 text-center">
+            <h2 className="text-xl font-semibold mb-2">{t('favorites.nothingFound')}</h2>
+            <p className="text-[var(--muted)]">{t('favorites.nothingFoundDescription')}</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {books.map((book) => (
+          {visibleFavorites.map((favorite) => {
+            const book = favorite.book;
+            if (!book) return null;
+
+            return (
             <div
               key={book.id}
               className="card p-4 block hover:translate-y-[-2px] hover:shadow-lg transition-all duration-200 group"
@@ -151,10 +207,13 @@ export default function FavoritesPage() {
               <Link href={`/books/${book.id}`} className="block">
                 <div className="aspect-[3/4] mb-3 overflow-hidden rounded-lg bg-[var(--card)] relative group/image">
                   {book.imageUrl ? (
-                    <img 
-                      src={book.imageUrl} 
-                      alt={book.title} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
+                    <Image
+                      src={book.imageUrl}
+                      alt={book.title}
+                      fill
+                      sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                      unoptimized
+                      className="object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -163,6 +222,9 @@ export default function FavoritesPage() {
                   )}
                   <div className="absolute top-2 left-2 z-10">
                     <FavoriteButton bookId={book.id} size="sm" />
+                  </div>
+                  <div className="absolute bottom-2 left-2 rounded-full bg-black/70 px-2 py-1 text-xs text-white">
+                    {new Date(favorite.createdAt).toLocaleDateString()}
                   </div>
                   {!book.isAvailable && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium z-10">
@@ -221,10 +283,11 @@ export default function FavoritesPage() {
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
+        )}
       </div>
     </div>
   );
 }
-

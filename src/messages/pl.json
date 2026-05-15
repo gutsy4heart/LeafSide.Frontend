@@ -6,6 +6,7 @@
     "cart": "Koszyk",
     "login": "Zaloguj się",
     "profile": "Profil",
+    "favorites": "Ulubione",
     "orders": "Zamówienia",
     "admin": "Admin",
     "logout": "Wyloguj się"
@@ -54,6 +55,27 @@
     "itemsSummary": "Razem: {count} przedmiotów • €{amount}",
     "loginToOrder": "Zaloguj się, aby złożyć zamówienie",
     "login": "Zaloguj się"
+  },
+  "favorites": {
+    "title": "Ulubione",
+    "count": "Książki",
+    "loginRequired": "Zaloguj się, aby zobaczyć ulubione",
+    "empty": "Brak ulubionych",
+    "emptyDescription": "Dodawaj książki do ulubionych, aby szybko wrócić do nich później.",
+    "browseBooks": "Przejdź do katalogu",
+    "error": "Nie udało się załadować ulubionych",
+    "available": "Dostępne",
+    "unavailable": "Niedostępne",
+    "search": "Szukaj",
+    "searchLabel": "Szukaj w ulubionych",
+    "sortNewest": "Najpierw najnowsze",
+    "sortTitle": "Według tytułu",
+    "sortPrice": "Według ceny",
+    "clear": "Wyczyść",
+    "clearing": "Czyszczenie...",
+    "clearConfirm": "Wyczyścić wszystkie ulubione?",
+    "nothingFound": "Nic nie znaleziono",
+    "nothingFoundDescription": "Spróbuj zmienić wyszukiwanie lub sortowanie."
   },
   "order": {
     "title": "Zamówienie",

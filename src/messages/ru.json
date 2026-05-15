@@ -6,6 +6,7 @@
     "cart": "Корзина",
     "login": "Войти",
     "profile": "Профиль",
+    "favorites": "Избранное",
     "orders": "Заказы",
     "admin": "Админ",
     "logout": "Выйти"
@@ -67,6 +68,27 @@
     "year": "год",
     "pages": "стр.",
     "language": "язык"
+  },
+  "favorites": {
+    "title": "Избранное",
+    "count": "Книг",
+    "loginRequired": "Войдите, чтобы открыть избранное",
+    "empty": "Избранное пусто",
+    "emptyDescription": "Добавляйте книги в избранное, чтобы быстро вернуться к ним позже.",
+    "browseBooks": "Перейти в каталог",
+    "error": "Не удалось загрузить избранное",
+    "available": "Доступно",
+    "unavailable": "Недоступно",
+    "search": "Поиск",
+    "searchLabel": "Поиск в избранном",
+    "sortNewest": "Сначала новые",
+    "sortTitle": "По названию",
+    "sortPrice": "По цене",
+    "clear": "Очистить",
+    "clearing": "Очистка...",
+    "clearConfirm": "Очистить всё избранное?",
+    "nothingFound": "Ничего не найдено",
+    "nothingFoundDescription": "Попробуйте изменить поиск или сортировку."
   },
   "auth": {
     "login": "Войти",

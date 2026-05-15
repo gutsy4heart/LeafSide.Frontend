@@ -6,6 +6,7 @@
     "cart": "Cart",
     "login": "Login",
     "profile": "Profile",
+    "favorites": "Favorites",
     "orders": "Orders",
     "admin": "Admin",
     "logout": "Logout"
@@ -67,6 +68,27 @@
     "year": "year",
     "pages": "pages",
     "language": "language"
+  },
+  "favorites": {
+    "title": "Favorites",
+    "count": "Books",
+    "loginRequired": "Log in to view favorites",
+    "empty": "No favorites yet",
+    "emptyDescription": "Add books to favorites so you can quickly return to them later.",
+    "browseBooks": "Browse catalog",
+    "error": "Could not load favorites",
+    "available": "Available",
+    "unavailable": "Unavailable",
+    "search": "Search",
+    "searchLabel": "Search favorites",
+    "sortNewest": "Newest first",
+    "sortTitle": "By title",
+    "sortPrice": "By price",
+    "clear": "Clear",
+    "clearing": "Clearing...",
+    "clearConfirm": "Clear all favorites?",
+    "nothingFound": "Nothing found",
+    "nothingFoundDescription": "Try changing the search or sorting."
   },
   "auth": {
     "login": "Login",

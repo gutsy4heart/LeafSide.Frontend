@@ -41,8 +41,28 @@ export async function POST(req: Request) {
       if (!res.ok) {
         const text = await res.text();
         console.log('Registration API - Backend error response:', text);
-        errors.push({ url, error: `${res.status} ${text}` });
-        continue;
+        let message = "Registration failed";
+        let details: unknown = text;
+
+        try {
+          details = JSON.parse(text);
+
+          if (Array.isArray(details)) {
+            const descriptions = details
+              .map((item) => item?.description || item?.Description || item?.message || item?.Message)
+              .filter(Boolean);
+            if (descriptions.length > 0) {
+              message = descriptions.join(" ");
+            }
+          } else if (details && typeof details === "object") {
+            const data = details as { message?: string; Message?: string; error?: string; Error?: string };
+            message = data.message || data.Message || data.error || data.Error || message;
+          }
+        } catch {
+          message = text || message;
+        }
+
+        return NextResponse.json({ error: "Registration failed", message, details }, { status: res.status });
       }
       
       const responseData = await res.text();
@@ -53,11 +73,6 @@ export async function POST(req: Request) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       console.log('Registration API - Request error:', errorMessage);
       errors.push({ url, error: errorMessage });
-      
-      // If it's a timeout error, try the next URL immediately
-      if (errorMessage.includes('aborted') || errorMessage.includes('timeout')) {
-        continue;
-      }
     }
   }
   
@@ -68,5 +83,4 @@ export async function POST(req: Request) {
     tried: errors 
   }, { status: 502 });
 }
-
 
