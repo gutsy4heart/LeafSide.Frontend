@@ -2,17 +2,24 @@
 
 import { useFavorites } from "../favorites-context";
 import { useAuth } from "../auth-context";
+import { useTranslations } from "../../lib/translations";
+import type { Book } from "../../types/book";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface FavoriteButtonProps {
   bookId: string;
+  book?: Book;
   className?: string;
   size?: "sm" | "md" | "lg";
+  showLabel?: boolean;
 }
 
-export default function FavoriteButton({ bookId, className = "", size = "md" }: FavoriteButtonProps) {
+export default function FavoriteButton({ bookId, book, className = "", size = "md", showLabel = false }: FavoriteButtonProps) {
   const { isFavorite, add, remove, loading } = useFavorites();
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslations();
+  const router = useRouter();
   const [isToggling, setIsToggling] = useState(false);
 
   const favorite = isFavorite(bookId);
@@ -28,7 +35,7 @@ export default function FavoriteButton({ bookId, className = "", size = "md" }: 
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      // Можно показать уведомление о необходимости входа
+      router.push("/login");
       return;
     }
 
@@ -37,7 +44,7 @@ export default function FavoriteButton({ bookId, className = "", size = "md" }: 
       if (favorite) {
         await remove(bookId);
       } else {
-        await add(bookId);
+        await add(bookId, book);
       }
     } catch (error) {
       console.error('FavoriteButton - Error toggling favorite:', error);
@@ -46,20 +53,23 @@ export default function FavoriteButton({ bookId, className = "", size = "md" }: 
     }
   };
 
-  if (!isAuthenticated) {
-    return null; // Не показываем кнопку, если пользователь не авторизован
-  }
+  const title = !isAuthenticated
+    ? t('favorites.loginToAdd')
+    : favorite
+      ? t('favorites.removeFromFavorites')
+      : t('favorites.addToFavorites');
 
   return (
     <button
       onClick={handleToggle}
       disabled={loading || isToggling}
-      className={`${sizeClasses[size]} flex items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${className} ${
-        favorite
+      className={`${showLabel ? "h-10 px-4 gap-2" : sizeClasses[size]} flex items-center justify-center rounded-full transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${className} ${
+        favorite && isAuthenticated
           ? "bg-red-500 text-white hover:bg-red-600"
-          : "bg-white/10 text-gray-400 hover:bg-white/20 hover:text-red-500"
+          : "bg-white/90 text-gray-700 hover:bg-white hover:text-red-500"
       }`}
-      title={favorite ? "Удалить из избранного" : "Добавить в избранное"}
+      title={title}
+      aria-label={title}
     >
       {isToggling ? (
         <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
@@ -75,7 +85,11 @@ export default function FavoriteButton({ bookId, className = "", size = "md" }: 
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       )}
+      {showLabel && (
+        <span className="text-sm font-medium">
+          {isToggling ? t('common.loading') : title}
+        </span>
+      )}
     </button>
   );
 }
-

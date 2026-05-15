@@ -3,6 +3,7 @@
 import { useState } from "react";
 import RatingInput from "./RatingInput";
 import { CreateReviewRequest, UpdateReviewRequest, Review } from "../../types/review";
+import { useTranslations } from "../../lib/translations";
 
 interface ReviewFormProps {
   bookId: string;
@@ -19,6 +20,7 @@ export default function ReviewForm({
   onCancel,
   isLoading = false
 }: ReviewFormProps) {
+  const { t } = useTranslations();
   const [rating, setRating] = useState(existingReview?.rating || 0);
   const [comment, setComment] = useState(existingReview?.comment || "");
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function ReviewForm({
     setError(null);
 
     if (rating === 0) {
-      setError("Пожалуйста, выберите оценку");
+      setError(t("reviews.ratingRequired"));
       return;
     }
 
@@ -44,7 +46,7 @@ export default function ReviewForm({
         setComment("");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Произошла ошибка");
+      setError(err instanceof Error ? err.message : t("reviews.genericError"));
     }
   };
 
@@ -52,7 +54,7 @@ export default function ReviewForm({
     <form onSubmit={handleSubmit} className="card p-4 space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">
-          Ваша оценка *
+          {t("reviews.yourRating")} *
         </label>
         <RatingInput
           value={rating}
@@ -63,7 +65,7 @@ export default function ReviewForm({
 
       <div>
         <label htmlFor="comment" className="block text-sm font-medium mb-2">
-          Комментарий (необязательно)
+          {t("reviews.commentOptional")}
         </label>
         <textarea
           id="comment"
@@ -73,7 +75,7 @@ export default function ReviewForm({
           rows={4}
           maxLength={2000}
           className="w-full px-3 py-2 bg-[var(--card)] border border-white/10 rounded-lg text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-50"
-          placeholder="Поделитесь своими впечатлениями о книге..."
+          placeholder={t("reviews.commentPlaceholder")}
         />
         <div className="text-xs text-[var(--muted)] mt-1 text-right">
           {comment.length} / 2000
@@ -91,10 +93,10 @@ export default function ReviewForm({
           className="btn-accent flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading
-            ? "Отправка..."
+            ? t("reviews.submitting")
             : existingReview
-            ? "Обновить отзыв"
-            : "Оставить отзыв"}
+            ? t("reviews.updateReview")
+            : t("reviews.leaveReview")}
         </button>
         {onCancel && (
           <button
@@ -103,11 +105,10 @@ export default function ReviewForm({
             disabled={isLoading}
             className="px-4 py-2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
           >
-            Отмена
+            {t("common.cancel")}
           </button>
         )}
       </div>
     </form>
   );
 }
-

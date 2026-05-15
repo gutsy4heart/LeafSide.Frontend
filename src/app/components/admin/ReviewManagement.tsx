@@ -1,8 +1,9 @@
 "use client";
 
 import { Review } from "../../../types/review";
+import { localizeReview } from "../../../lib/localized-review";
+import { useTranslations } from "../../../lib/translations";
 import RatingDisplay from "../RatingDisplay";
-import { fetchJson } from "../../../lib/api";
 
 interface ReviewManagementProps {
   reviews: Review[];
@@ -16,14 +17,20 @@ export default function ReviewManagement({
   reviews,
   loading,
   onApprove,
-  onReject,
-  onRefresh
+  onReject
 }: ReviewManagementProps) {
+  const { t, language } = useTranslations();
+  const dateLocales = {
+    ru: "ru-RU",
+    en: "en-US",
+    pl: "pl-PL",
+  } as const;
+
   if (loading) {
     return (
       <div className="text-center py-12">
         <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-[var(--muted)]">Загрузка отзывов...</p>
+        <p className="text-[var(--muted)]">{t("reviews.loading")}</p>
       </div>
     );
   }
@@ -31,7 +38,7 @@ export default function ReviewManagement({
   if (reviews.length === 0) {
     return (
       <div className="text-center py-12 text-[var(--muted)]">
-        Нет отзывов, ожидающих модерации
+        {t("reviews.noPending")}
       </div>
     );
   }
@@ -39,7 +46,8 @@ export default function ReviewManagement({
   return (
     <div className="space-y-4">
       {reviews.map((review) => {
-        const date = new Date(review.createdAt).toLocaleDateString("ru-RU", {
+        const localizedReview = localizeReview(review, language);
+        const date = new Date(review.createdAt).toLocaleDateString(dateLocales[language], {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -53,17 +61,17 @@ export default function ReviewManagement({
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="font-semibold">
-                    {review.userName || "Анонимный пользователь"}
+                    {review.userName || t("reviews.anonymousUser")}
                   </div>
                   <RatingDisplay rating={review.rating} size="sm" />
                   <span className="text-sm text-[var(--muted)]">{date}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)] mb-2">
-                  Книга ID: {review.bookId}
+                  {t("reviews.bookId")}: {review.bookId}
                 </div>
-                {review.comment && (
+                {localizedReview.displayComment && (
                   <p className="text-[var(--foreground)] whitespace-pre-wrap bg-[var(--background)] p-3 rounded-lg">
-                    {review.comment}
+                    {localizedReview.displayComment}
                   </p>
                 )}
               </div>
@@ -73,13 +81,13 @@ export default function ReviewManagement({
                 onClick={() => onApprove(review.id)}
                 className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
               >
-                Одобрить
+                {t("reviews.approve")}
               </button>
               <button
                 onClick={() => onReject(review.id)}
                 className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
               >
-                Отклонить
+                {t("reviews.reject")}
               </button>
             </div>
           </div>
@@ -88,4 +96,3 @@ export default function ReviewManagement({
     </div>
   );
 }
-

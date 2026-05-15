@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../auth-context";
 import { useCart } from "../cart-context";
 import { useTranslations } from "../../lib/translations";
+import { localizeBook } from "../../lib/localized-book";
+import type { Book } from "../../types/book";
 
 interface OrderConfirmationModalProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface OrderConfirmationModalProps {
   onSuccess: () => void;
   totalAmount: number;
   totalItems: number;
+  books: Book[];
 }
 
 export default function OrderConfirmationModal({
@@ -18,92 +21,112 @@ export default function OrderConfirmationModal({
   onClose,
   onSuccess,
   totalAmount,
-  totalItems
+  totalItems,
+  books
 }: OrderConfirmationModalProps) {
-  const { token, checkAndRefreshToken } = useAuth();
+  const { token, checkAndRefreshToken, userInfo } = useAuth();
   const { state, clear } = useCart();
-  const { t } = useTranslations();
-  const [step, setStep] = useState<'confirm' | 'processing' | 'success'>('confirm');
+  const { t, language } = useTranslations();
+  const [step, setStep] = useState<"confirm" | "processing" | "success">("confirm");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customerName, setCustomerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [notes, setNotes] = useState("");
 
-  // Сброс состояния при открытии модального окна
+  const fieldClassName = "w-full rounded-lg border border-white/10 bg-[var(--background)] px-3 py-2 text-sm text-[var(--foreground)] placeholder-[var(--muted)] outline-none transition-colors focus:border-[var(--accent)] disabled:opacity-50";
+
   useEffect(() => {
     if (isOpen) {
-      setStep('confirm');
+      const fullName = [userInfo?.firstName, userInfo?.lastName].filter(Boolean).join(" ").trim();
+      setStep("confirm");
       setError(null);
+      setCustomerName(fullName || userInfo?.name || "");
+      setCustomerEmail(userInfo?.email || "");
+      setCustomerPhone(userInfo?.phoneNumber || "");
+      setShippingAddress("");
+      setNotes("");
     }
-  }, [isOpen]);
+  }, [isOpen, userInfo]);
 
-  const handleConfirmOrder = async () => {
+  const getBookById = (bookId: string) => {
+    return books.find((book) => book.id === bookId);
+  };
+
+  const validateForm = () => {
+    if (!customerName.trim()) return t("orderConfirmation.customerNameRequired");
+    if (!customerEmail.trim()) return t("orderConfirmation.customerEmailRequired");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())) return t("orderConfirmation.customerEmailInvalid");
+    if (!shippingAddress.trim()) return t("orderConfirmation.shippingAddressRequired");
+    return null;
+  };
+
+  const handleConfirmOrder = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     if (!token) {
-      setError(t('orderConfirmation.loginRequired'));
+      setError(t("orderConfirmation.loginRequired"));
+      return;
+    }
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     try {
       setLoading(true);
       setError(null);
-      setStep('processing');
+      setStep("processing");
 
-      // Проверяем и обновляем токен при необходимости
       const tokenValid = await checkAndRefreshToken();
       if (!tokenValid) {
-        setError(t('orderConfirmation.sessionExpired'));
-        setStep('confirm');
+        setError(t("orderConfirmation.sessionExpired"));
+        setStep("confirm");
         return;
       }
 
-      // Получаем актуальный токен
-      const currentToken = token;
-
-      // Подготавливаем данные заказа
       const orderData = {
-        items: state.items.map(item => ({
+        items: state.items.map((item) => ({
           bookId: item.bookId,
           quantity: item.quantity
         })),
-        totalAmount: totalAmount
+        totalAmount,
+        customerName: customerName.trim(),
+        customerEmail: customerEmail.trim(),
+        customerPhone: customerPhone.trim() || null,
+        shippingAddress: shippingAddress.trim(),
+        notes: notes.trim() || null
       };
 
-      // Отправляем запрос на создание заказа
-      console.log('Отправляем данные заказа:', orderData);
-      console.log('Токен:', currentToken.substring(0, 20) + '...');
-      
-      const response = await fetch('/api/orders', {
-        method: 'POST',
+      const response = await fetch("/api/orders", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${currentToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(orderData),
       });
-      
-      console.log('Ответ сервера:', response.status, response.statusText);
 
       if (response.ok) {
-        const result = await response.json();
-        console.log('Заказ успешно создан:', result);
-        
-        // Очищаем корзину
-        clear();
-        setStep('success');
-        
-        // Автоматически закрываем модальное окно через 3 секунды
+        await clear();
+        setStep("success");
+
         setTimeout(() => {
           onSuccess();
           onClose();
         }, 3000);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error('Ошибка при создании заказа:', errorData);
-        setError(errorData.error || t('orderConfirmation.orderErrorDetails'));
-        setStep('confirm');
+        setError(errorData.error || t("orderConfirmation.orderErrorDetails"));
+        setStep("confirm");
       }
-    } catch (err) {
-      console.error('Ошибка при оформлении заказа:', err);
-      setError(t('orderConfirmation.orderError'));
-      setStep('confirm');
+    } catch {
+      setError(t("orderConfirmation.orderError"));
+      setStep("confirm");
     } finally {
       setLoading(false);
     }
@@ -112,117 +135,195 @@ export default function OrderConfirmationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 modal-enter">
-      <div className="bg-[var(--card)] border border-white/10 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Заголовок */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 modal-enter">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-white/10 bg-[var(--card)] p-6 shadow-2xl">
+        <div className="mb-6 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-[var(--foreground)]">
-            {t('orderConfirmation.title')}
+            {t("orderConfirmation.title")}
           </h3>
-          {step === 'confirm' && (
+          {step === "confirm" && (
             <button
               onClick={onClose}
-              className="text-[var(--muted)] hover:text-[var(--foreground)] transition-colors p-1"
+              className="rounded-md p-1 text-[var(--muted)] transition-colors hover:bg-white/5 hover:text-[var(--foreground)]"
+              aria-label={t("common.close")}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
         </div>
 
-        {/* Содержимое в зависимости от шага */}
-        {step === 'confirm' && (
-          <div className="space-y-6">
-            {/* Информация о заказе */}
-            <div className="bg-[var(--background)] rounded-lg p-4">
-              <h4 className="font-medium text-[var(--foreground)] mb-3">{t('orderConfirmation.orderDetails')}</h4>
-              <div className="space-y-2 text-sm">
+        {step === "confirm" && (
+          <form onSubmit={handleConfirmOrder} className="space-y-6">
+            <section className="rounded-lg bg-[var(--background)] p-4">
+              <h4 className="mb-3 font-medium text-[var(--foreground)]">{t("orderConfirmation.customerDetails")}</h4>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm">
+                  <span className="mb-1 block text-[var(--muted)]">{t("orderConfirmation.customerName")} *</span>
+                  <input
+                    value={customerName}
+                    onChange={(event) => setCustomerName(event.target.value)}
+                    className={fieldClassName}
+                    placeholder={t("orderConfirmation.customerNamePlaceholder")}
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="mb-1 block text-[var(--muted)]">{t("orderConfirmation.customerEmail")} *</span>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(event) => setCustomerEmail(event.target.value)}
+                    className={fieldClassName}
+                    placeholder={t("orderConfirmation.customerEmailPlaceholder")}
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block text-sm sm:col-span-2">
+                  <span className="mb-1 block text-[var(--muted)]">{t("orderConfirmation.customerPhone")}</span>
+                  <input
+                    value={customerPhone}
+                    onChange={(event) => setCustomerPhone(event.target.value)}
+                    className={fieldClassName}
+                    placeholder={t("orderConfirmation.customerPhonePlaceholder")}
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block text-sm sm:col-span-2">
+                  <span className="mb-1 block text-[var(--muted)]">{t("orderConfirmation.shippingAddress")} *</span>
+                  <textarea
+                    value={shippingAddress}
+                    onChange={(event) => setShippingAddress(event.target.value)}
+                    className={fieldClassName}
+                    rows={3}
+                    placeholder={t("orderConfirmation.shippingAddressPlaceholder")}
+                    disabled={loading}
+                  />
+                </label>
+                <label className="block text-sm sm:col-span-2">
+                  <span className="mb-1 block text-[var(--muted)]">{t("orderConfirmation.notes")}</span>
+                  <textarea
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    className={fieldClassName}
+                    rows={2}
+                    placeholder={t("orderConfirmation.notesPlaceholder")}
+                    disabled={loading}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className="rounded-lg bg-[var(--background)] p-4">
+              <h4 className="mb-3 font-medium text-[var(--foreground)]">{t("orderConfirmation.orderDetails")}</h4>
+              <div className="mb-4 max-h-56 space-y-3 overflow-y-auto pr-1">
+                {state.items.map((item) => {
+                  const book = getBookById(item.bookId);
+                  if (!book) return null;
+                  const localizedBook = localizeBook(book, language);
+                  const lineTotal = book.price * item.quantity;
+
+                  return (
+                    <div key={item.bookId} className="flex gap-3 rounded-md border border-white/10 p-3">
+                      <div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded bg-white/5">
+                        {book.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={book.imageUrl} alt={localizedBook.displayTitle} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-[var(--muted)]">
+                            {localizedBook.displayTitle.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-[var(--foreground)]">{localizedBook.displayTitle}</div>
+                        <div className="text-xs text-[var(--muted)]">{localizedBook.displayAuthor}</div>
+                        <div className="mt-2 flex items-center justify-between text-sm">
+                          <span className="text-[var(--muted)]">{item.quantity} x €{book.price.toFixed(2)}</span>
+                          <span className="font-medium text-[var(--foreground)]">€{lineTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="space-y-2 border-t border-white/10 pt-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">{t('orderConfirmation.items')}:</span>
+                  <span className="text-[var(--muted)]">{t("orderConfirmation.items")}:</span>
                   <span className="text-[var(--foreground)]">{totalItems}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">{t('orderConfirmation.amount')}:</span>
-                  <span className="text-[var(--foreground)] font-medium">€{totalAmount.toFixed(2)}</span>
+                  <span className="text-[var(--muted)]">{t("orderConfirmation.shipping")}:</span>
+                  <span className="text-green-400">{t("orderConfirmation.free")}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-[var(--muted)]">{t('orderConfirmation.shipping')}:</span>
-                  <span className="text-green-400">{t('orderConfirmation.free')}</span>
-                </div>
-                <div className="border-t border-white/10 pt-2 flex justify-between font-medium">
-                  <span className="text-[var(--foreground)]">{t('orderConfirmation.total')}:</span>
+                <div className="flex justify-between text-base font-semibold">
+                  <span className="text-[var(--foreground)]">{t("orderConfirmation.total")}:</span>
                   <span className="text-[var(--accent)]">€{totalAmount.toFixed(2)}</span>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Ошибка */}
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-                <p className="text-red-400 text-sm">{error}</p>
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3">
+                <p className="text-sm text-red-400">{error}</p>
               </div>
             )}
 
-            {/* Кнопки */}
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 text-sm font-medium text-[var(--muted)] bg-[var(--card)] border border-white/20 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] transition-colors"
+                className="flex-1 rounded-lg border border-white/20 bg-[var(--card)] px-4 py-2 text-sm font-medium text-[var(--muted)] transition-colors hover:bg-white/5"
               >
-{t('orderConfirmation.cancel')}
+                {t("orderConfirmation.cancel")}
               </button>
               <button
-                onClick={handleConfirmOrder}
+                type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] bg-[var(--accent)] border border-transparent rounded-lg hover:bg-[var(--accent)]/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)] disabled:opacity-50 transition-colors"
+                className="flex-1 rounded-lg border border-transparent bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] transition-colors hover:bg-[var(--accent)]/80 disabled:opacity-50"
               >
-{loading ? t('orderConfirmation.processing') : t('orderConfirmation.confirm')}
+                {loading ? t("orderConfirmation.processing") : t("orderConfirmation.confirm")}
               </button>
             </div>
-          </div>
+          </form>
         )}
 
-        {/* Шаг обработки */}
-        {step === 'processing' && (
-          <div className="text-center space-y-6">
-            <div className="relative">
-              <div className="w-16 h-16 mx-auto bg-[var(--accent)]/20 rounded-full flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full"></div>
-              </div>
+        {step === "processing" && (
+          <div className="space-y-6 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent)]/20">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--accent)] border-t-transparent"></div>
             </div>
             <div>
-              <h4 className="text-lg font-medium text-[var(--foreground)] mb-2">
-                {t('orderConfirmation.processingTitle')}
+              <h4 className="mb-2 text-lg font-medium text-[var(--foreground)]">
+                {t("orderConfirmation.processingTitle")}
               </h4>
-              <p className="text-[var(--muted)] text-sm">
-                {t('orderConfirmation.processingDescription')}
+              <p className="text-sm text-[var(--muted)]">
+                {t("orderConfirmation.processingDescription")}
               </p>
             </div>
           </div>
         )}
 
-        {/* Шаг успешного оформления */}
-        {step === 'success' && (
-          <div className="text-center space-y-6">
-            <div className="relative success-animation">
-              <div className="w-16 h-16 mx-auto bg-green-500/20 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {step === "success" && (
+          <div className="space-y-6 text-center">
+            <div className="success-animation relative">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
+                <svg className="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              {/* Анимация успеха */}
-              <div className="absolute inset-0 w-16 h-16 mx-auto bg-green-500/30 rounded-full animate-ping"></div>
+              <div className="absolute inset-0 mx-auto h-16 w-16 animate-ping rounded-full bg-green-500/30"></div>
             </div>
             <div>
-              <h4 className="text-lg font-medium text-[var(--foreground)] mb-2">
-                {t('orderConfirmation.successTitle')}
+              <h4 className="mb-2 text-lg font-medium text-[var(--foreground)]">
+                {t("orderConfirmation.successTitle")}
               </h4>
-              <p className="text-[var(--muted)] text-sm mb-4">
-                {t('orderConfirmation.successDescription', { amount: totalAmount.toFixed(2) })}
+              <p className="mb-4 text-sm text-[var(--muted)]">
+                {t("orderConfirmation.successDescription", { amount: totalAmount.toFixed(2) })}
               </p>
-              <p className="text-[var(--muted)] text-xs">
-                {t('orderConfirmation.autoClose')}
+              <p className="text-xs text-[var(--muted)]">
+                {t("orderConfirmation.autoClose")}
               </p>
             </div>
           </div>

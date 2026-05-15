@@ -3,6 +3,7 @@
 import { Book } from "../../types/book";
 import { useCart } from "../cart-context";
 import { useTranslations } from "../../lib/translations";
+import { localizeBook } from "../../lib/localized-book";
 import { useState } from "react";
 import Link from "next/link";
 import FavoriteButton from "./FavoriteButton";
@@ -13,8 +14,9 @@ interface BookCardProps {
 
 export default function BookCard({ book }: BookCardProps) {
   const { add } = useCart();
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [isAdding, setIsAdding] = useState(false);
+  const localizedBook = localizeBook(book, language);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,13 +48,13 @@ export default function BookCard({ book }: BookCardProps) {
               {t('book.unavailable')}
             </div>
           )}
-          <div className="absolute top-2 left-2 z-10 opacity-0 group-hover/image:opacity-100 transition-opacity">
-            <FavoriteButton bookId={book.id} size="sm" />
+          <div className="absolute top-2 left-2 z-10">
+            <FavoriteButton bookId={book.id} book={book} size="sm" />
           </div>
           {book.imageUrl ? (
             <img 
               src={book.imageUrl} 
-              alt={book.title} 
+              alt={localizedBook.displayTitle} 
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" 
             />
           ) : (
@@ -64,9 +66,9 @@ export default function BookCard({ book }: BookCardProps) {
         </div>
         
         <h2 className="font-medium leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
-          {book.title}
+          {localizedBook.displayTitle}
         </h2>
-        <p className="text-sm text-[var(--muted)] mt-1">{book.author}</p>
+        <p className="text-sm text-[var(--muted)] mt-1">{localizedBook.displayAuthor}</p>
         {book.price != null && (
           <p className="mt-2 font-semibold text-green-600">
             € {book.price.toFixed(2)}

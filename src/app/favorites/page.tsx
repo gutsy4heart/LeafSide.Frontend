@@ -3,6 +3,7 @@
 import { useFavorites } from "../favorites-context";
 import { useAuth } from "../auth-context";
 import { useTranslations } from "../../lib/translations";
+import { localizeBook } from "../../lib/localized-book";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,7 +13,7 @@ import { useCart } from "../cart-context";
 export default function FavoritesPage() {
   const { favorites, loading: favoritesLoading, error: favoritesError, clear } = useFavorites();
   const { isAuthenticated } = useAuth();
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const { add: addToCart } = useCart();
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
@@ -25,15 +26,18 @@ export default function FavoritesPage() {
       const book = favorite.book;
       if (!book) return false;
       if (!normalizedQuery) return true;
+      const localizedBook = localizeBook(book, language);
 
-      return [book.title, book.author, book.genre, book.language]
+      return [localizedBook.displayTitle, localizedBook.displayAuthor, localizedBook.displayGenre, localizedBook.displayLanguage]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedQuery));
     });
 
     return [...filtered].sort((a, b) => {
       if (sortBy === "title") {
-        return (a.book?.title ?? "").localeCompare(b.book?.title ?? "");
+        return (a.book ? localizeBook(a.book, language).displayTitle : "").localeCompare(
+          b.book ? localizeBook(b.book, language).displayTitle : ""
+        );
       }
 
       if (sortBy === "price") {
@@ -42,7 +46,7 @@ export default function FavoritesPage() {
 
       return b.createdAt.localeCompare(a.createdAt);
     });
-  }, [favorites, query, sortBy]);
+  }, [favorites, query, sortBy, language]);
 
   const unavailableCount = useMemo(() => {
     return favorites.filter((favorite) => favorite.book && !favorite.book.isAvailable).length;
@@ -198,6 +202,7 @@ export default function FavoritesPage() {
           {visibleFavorites.map((favorite) => {
             const book = favorite.book;
             if (!book) return null;
+            const localizedBook = localizeBook(book, language);
 
             return (
             <div
@@ -209,7 +214,7 @@ export default function FavoritesPage() {
                   {book.imageUrl ? (
                     <Image
                       src={book.imageUrl}
-                      alt={book.title}
+                      alt={localizedBook.displayTitle}
                       fill
                       sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
                       unoptimized
@@ -234,9 +239,9 @@ export default function FavoritesPage() {
                 </div>
                 
                 <h2 className="font-medium leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
-                  {book.title}
+                  {localizedBook.displayTitle}
                 </h2>
-                <p className="text-sm text-[var(--muted)] mt-1">{book.author}</p>
+                <p className="text-sm text-[var(--muted)] mt-1">{localizedBook.displayAuthor}</p>
                 {book.price != null && (
                   <p className="mt-2 font-semibold text-green-600">
                     € {book.price.toFixed(2)}

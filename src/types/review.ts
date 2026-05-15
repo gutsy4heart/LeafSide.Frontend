@@ -4,6 +4,10 @@ export interface Review {
   bookId: string;
   rating: number;
   comment?: string;
+  commentRu?: string;
+  commentEn?: string;
+  commentPl?: string;
+  translations?: Partial<Record<"ru" | "en" | "pl", { comment?: string }>>;
   isApproved: boolean;
   createdAt: string;
   updatedAt: string;
@@ -26,4 +30,3 @@ export interface UpdateReviewRequest {
   rating: number;
   comment?: string;
 }
-

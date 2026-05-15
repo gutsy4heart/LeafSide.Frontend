@@ -12,7 +12,7 @@ export type Favorite = {
 
 type FavoritesContextType = {
   favorites: Favorite[];
-  add: (bookId: string) => Promise<void>;
+  add: (bookId: string, book?: Book) => Promise<void>;
   remove: (bookId: string) => Promise<void>;
   clear: () => Promise<void>;
   isFavorite: (bookId: string) => boolean;
@@ -71,7 +71,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     loadFavorites();
   }, [loadFavorites]);
 
-  const add = async (bookId: string) => {
+  const add = async (bookId: string, book?: Book) => {
     if (!token || !isAuthenticated) {
       setError('Необходимо войти в систему');
       return;
@@ -94,11 +94,16 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data: Favorite = await response.json();
+        const favorite = {
+          ...data,
+          book: data.book ?? book
+        };
+
         setFavorites(prev => {
-          if (prev.some(fav => fav.bookId === data.bookId)) {
+          if (prev.some(fav => fav.bookId === favorite.bookId)) {
             return prev;
           }
-          return [data, ...prev];
+          return [favorite, ...prev];
         });
       } else {
         const errorData = await response.json();

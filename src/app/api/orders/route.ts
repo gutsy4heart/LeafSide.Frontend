@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5233';
 
+type OrderItemPayload = {
+  bookId: string;
+  quantity: number;
+};
+
 export async function POST(request: NextRequest) {
   try {
     console.log('API route /api/orders вызван');
     const body = await request.json();
-    const { items, totalAmount } = body;
-    console.log('Получены данные:', { items, totalAmount });
+    const { items, totalAmount, customerName, customerEmail, customerPhone, shippingAddress, notes } = body;
+    console.log('Получены данные:', { items, totalAmount, customerName, customerEmail, customerPhone, shippingAddress, notes });
 
     // Получаем токен из заголовков
     const authHeader = request.headers.get('authorization');
@@ -35,13 +40,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!customerName || !String(customerName).trim()) {
+      return NextResponse.json(
+        { error: 'Имя клиента обязательно' },
+        { status: 400 }
+      );
+    }
+
+    if (!customerEmail || !String(customerEmail).trim()) {
+      return NextResponse.json(
+        { error: 'Email клиента обязателен' },
+        { status: 400 }
+      );
+    }
+
+    if (!shippingAddress || !String(shippingAddress).trim()) {
+      return NextResponse.json(
+        { error: 'Адрес доставки обязателен' },
+        { status: 400 }
+      );
+    }
+
     // Подготавливаем данные для отправки на бэкенд
     const orderData = {
-      items: items.map((item: any) => ({
+      items: (items as OrderItemPayload[]).map((item) => ({
         bookId: item.bookId,
         quantity: item.quantity
       })),
-      totalAmount: totalAmount
+      totalAmount,
+      customerName: String(customerName).trim(),
+      customerEmail: String(customerEmail).trim(),
+      customerPhone: customerPhone ? String(customerPhone).trim() : null,
+      shippingAddress: String(shippingAddress).trim(),
+      notes: notes ? String(notes).trim() : null
     };
 
     // Отправляем запрос на бэкенд
@@ -76,6 +107,11 @@ export async function POST(request: NextRequest) {
         totalAmount: order.totalAmount,
         status: order.status,
         createdAt: order.createdAt,
+        shippingAddress: order.shippingAddress,
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        customerPhone: order.customerPhone,
+        notes: order.notes,
         items: order.items
       }
     });

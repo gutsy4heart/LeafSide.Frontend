@@ -14,6 +14,22 @@ export interface Book {
   publishing?: string;
   createdAt: string;
   updatedAt: string;
+  titleRu?: string;
+  titleEn?: string;
+  titlePl?: string;
+  authorRu?: string;
+  authorEn?: string;
+  authorPl?: string;
+  descriptionRu?: string;
+  descriptionEn?: string;
+  descriptionPl?: string;
+  genreRu?: string;
+  genreEn?: string;
+  genrePl?: string;
+  publishingRu?: string;
+  publishingEn?: string;
+  publishingPl?: string;
+  translations?: Partial<Record<"ru" | "en" | "pl", Partial<Pick<Book, "title" | "author" | "description" | "genre" | "publishing" | "language">>>>;
 }
 
 export interface CreateBookRequest {

@@ -2,6 +2,8 @@
 
 import type { Book } from "@/types/book";
 import { fetchJson } from "@/lib/api";
+import { localizeBook } from "@/lib/localized-book";
+import { localizeReview } from "@/lib/localized-review";
 import { notFound } from "next/navigation";
 import AddToCartButton from "./add-to-cart-button";
 import FavoriteButton from "../../components/FavoriteButton";
@@ -11,13 +13,13 @@ import { useEffect, useState } from "react";
 import ReviewList from "../../components/ReviewList";
 import ReviewForm from "../../components/ReviewForm";
 import RatingDisplay from "../../components/RatingDisplay";
-import { Review, BookRating, CreateReviewRequest, UpdateReviewRequest } from "../../../types/review";
+import { Review, BookRating } from "../../../types/review";
 import { useAuth } from "../../auth-context";
 
 type Props = { params: Promise<{ id: string }> };
 
 export default function BookDetails({ params }: Props) {
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const { isAuthenticated, userInfo, token } = useAuth();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,26 @@ export default function BookDetails({ params }: Props) {
   const [isEditingReview, setIsEditingReview] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
+
+  const getReviewCountLabel = (count: number) => {
+    if (language === "ru") {
+      const lastDigit = count % 10;
+      const lastTwoDigits = count % 100;
+      if (lastDigit === 1 && lastTwoDigits !== 11) return t("reviews.countOne");
+      if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits >= 20)) return t("reviews.countFew");
+      return t("reviews.countMany");
+    }
+
+    if (language === "pl") {
+      const lastDigit = count % 10;
+      const lastTwoDigits = count % 100;
+      if (count === 1) return t("reviews.countOne");
+      if (lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 10 || lastTwoDigits >= 20)) return t("reviews.countFew");
+      return t("reviews.countMany");
+    }
+
+    return count === 1 ? t("reviews.countOne") : t("reviews.countMany");
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,6 +118,9 @@ export default function BookDetails({ params }: Props) {
       </div>
     );
   }
+
+  const localizedBook = localizeBook(book, language);
+  const localizedMyReview = myReview ? localizeReview(myReview, language) : null;
   
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -109,13 +134,13 @@ export default function BookDetails({ params }: Props) {
         <div className="card p-6">
           <div className="aspect-[3/4] overflow-hidden rounded-lg bg-[var(--card)] mb-4 relative">
             <div className="absolute top-4 right-4 z-10">
-              <FavoriteButton bookId={book.id} size="md" />
+              <FavoriteButton bookId={book.id} book={book} size="md" />
             </div>
             {book.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img 
                 src={book.imageUrl} 
-                alt={book.title} 
+                alt={localizedBook.displayTitle} 
                 className="w-full h-full object-cover transition-transform hover:scale-105" 
               />
             ) : (
@@ -129,19 +154,19 @@ export default function BookDetails({ params }: Props) {
         <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold leading-tight text-[var(--foreground)] mb-2">
-              {book.title}
+              {localizedBook.displayTitle}
             </h1>
             <p className="text-lg text-[var(--muted)] mb-1">
-              {t('book.author')}: <span className="font-medium">{book.author}</span>
+              {t('book.author')}: <span className="font-medium">{localizedBook.displayAuthor}</span>
             </p>
             {book.genre && (
               <p className="text-sm text-[var(--muted)]">
-                {t('book.genre')}: <span className="font-medium">{book.genre}</span>
+                {t('book.genre')}: <span className="font-medium">{localizedBook.displayGenre}</span>
               </p>
             )}
             {book.publishing && (
               <p className="text-sm text-[var(--muted)]">
-                {t('book.publisher')}: <span className="font-medium">{book.publishing}</span>
+                {t('book.publisher')}: <span className="font-medium">{localizedBook.displayPublishing}</span>
               </p>
             )}
           </div>
@@ -162,12 +187,20 @@ export default function BookDetails({ params }: Props) {
           <div>
             <h2 className="text-xl font-semibold mb-3">{t('book.description')}</h2>
             <p className="text-base leading-relaxed text-[var(--muted)]">
-              {book.description || t('book.descriptionNotAvailable')}
+              {localizedBook.displayDescription || t('book.descriptionNotAvailable')}
             </p>
           </div>
           
           <div className="pt-4">
-            <AddToCartButton bookId={book.id} bookTitle={book.title} isAvailable={book.isAvailable} />
+            <AddToCartButton bookId={book.id} bookTitle={localizedBook.displayTitle} isAvailable={book.isAvailable} />
+            <div className="mt-3">
+              <FavoriteButton
+                bookId={book.id}
+                book={book}
+                showLabel
+                className="w-full justify-center bg-white/10 text-[var(--foreground)] hover:bg-white/15 hover:text-red-400"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -175,12 +208,12 @@ export default function BookDetails({ params }: Props) {
       {/* Reviews Section */}
       <div className="mt-12 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Отзывы и рейтинги</h2>
+          <h2 className="text-2xl font-semibold">{t("reviews.title")}</h2>
           {rating && (
             <div className="flex items-center gap-4">
               <RatingDisplay rating={rating.averageRating} size="lg" showValue />
               <span className="text-[var(--muted)]">
-                {rating.reviewCount} {rating.reviewCount === 1 ? "отзыв" : rating.reviewCount < 5 ? "отзыва" : "отзывов"}
+                {rating.reviewCount} {getReviewCountLabel(rating.reviewCount)}
               </span>
             </div>
           )}
@@ -193,7 +226,7 @@ export default function BookDetails({ params }: Props) {
             onSubmit={async (data) => {
               setIsSubmittingReview(true);
               try {
-                if (!token) throw new Error("Не авторизован");
+                if (!token) throw new Error(t("reviews.notAuthorized"));
                 const response = await fetch("/api/reviews", {
                   method: "POST",
                   headers: {
@@ -202,7 +235,7 @@ export default function BookDetails({ params }: Props) {
                   },
                   body: JSON.stringify(data)
                 });
-                if (!response.ok) throw new Error("Не удалось создать отзыв");
+                if (!response.ok) throw new Error(t("reviews.createFailed"));
                 const newReview = await response.json();
                 setMyReview(newReview);
                 // Refresh rating
@@ -219,19 +252,19 @@ export default function BookDetails({ params }: Props) {
         {isAuthenticated && myReview && !isEditingReview && (
           <div className="card p-4">
             <div className="flex items-center justify-between mb-2">
-              <div className="font-semibold">Ваш отзыв</div>
+              <div className="font-semibold">{t("reviews.yourReview")}</div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsEditingReview(true)}
                   className="text-sm text-blue-400 hover:text-blue-300"
                 >
-                  Редактировать
+                  {t("reviews.edit")}
                 </button>
                 <button
                   onClick={async () => {
-                    if (confirm("Удалить отзыв?")) {
+                    if (confirm(t("reviews.deleteConfirm"))) {
                       try {
-                        if (!token) throw new Error("Не авторизован");
+                        if (!token) throw new Error(t("reviews.notAuthorized"));
                         await fetch(`/api/reviews/${myReview.id}`, {
                           method: "DELETE",
                           headers: { Authorization: `Bearer ${token}` }
@@ -243,23 +276,23 @@ export default function BookDetails({ params }: Props) {
                         ]);
                         setReviews(reviewsData);
                         setRating(ratingData);
-                      } catch (err) {
-                        alert("Не удалось удалить отзыв");
+                      } catch {
+                        alert(t("reviews.deleteFailed"));
                       }
                     }
                   }}
                   className="text-sm text-red-400 hover:text-red-300"
                 >
-                  Удалить
+                  {t("reviews.delete")}
                 </button>
               </div>
             </div>
             <RatingDisplay rating={myReview.rating} size="sm" />
-            {myReview.comment && (
-              <p className="mt-2 text-[var(--foreground)]">{myReview.comment}</p>
+            {localizedMyReview?.displayComment && (
+              <p className="mt-2 text-[var(--foreground)] whitespace-pre-wrap">{localizedMyReview.displayComment}</p>
             )}
             {!myReview.isApproved && (
-              <p className="mt-2 text-sm text-yellow-400">Ожидает модерации</p>
+              <p className="mt-2 text-sm text-yellow-400">{t("reviews.pendingModeration")}</p>
             )}
           </div>
         )}
@@ -271,7 +304,7 @@ export default function BookDetails({ params }: Props) {
             onSubmit={async (data) => {
               setIsSubmittingReview(true);
               try {
-                if (!token) throw new Error("Не авторизован");
+                if (!token) throw new Error(t("reviews.notAuthorized"));
                 const response = await fetch(`/api/reviews/${myReview.id}`, {
                   method: "PUT",
                   headers: {
@@ -280,7 +313,7 @@ export default function BookDetails({ params }: Props) {
                   },
                   body: JSON.stringify(data)
                 });
-                if (!response.ok) throw new Error("Не удалось обновить отзыв");
+                if (!response.ok) throw new Error(t("reviews.updateFailed"));
                 const updatedReview = await response.json();
                 setMyReview(updatedReview);
                 setIsEditingReview(false);
@@ -295,7 +328,7 @@ export default function BookDetails({ params }: Props) {
 
         {/* Reviews List */}
         {reviewsLoading ? (
-          <div className="text-center py-8 text-[var(--muted)]">Загрузка отзывов...</div>
+          <div className="text-center py-8 text-[var(--muted)]">{t("reviews.loading")}</div>
         ) : (
           <ReviewList
             reviews={reviews}
@@ -305,9 +338,9 @@ export default function BookDetails({ params }: Props) {
               setIsEditingReview(true);
             }}
             onDelete={async (reviewId) => {
-              if (confirm("Удалить отзыв?")) {
+              if (confirm(t("reviews.deleteConfirm"))) {
                 try {
-                  if (!token) throw new Error("Не авторизован");
+                  if (!token) throw new Error(t("reviews.notAuthorized"));
                   await fetch(`/api/reviews/${reviewId}`, {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${token}` }
@@ -321,8 +354,8 @@ export default function BookDetails({ params }: Props) {
                   if (myReview?.id === reviewId) {
                     setMyReview(null);
                   }
-                } catch (err) {
-                  alert("Не удалось удалить отзыв");
+                } catch {
+                  alert(t("reviews.deleteFailed"));
                 }
               }
             }}
@@ -332,5 +365,3 @@ export default function BookDetails({ params }: Props) {
     </div>
   );
 }
-
-

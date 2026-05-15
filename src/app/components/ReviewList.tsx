@@ -1,6 +1,8 @@
 "use client";
 
 import { Review } from "../../types/review";
+import { localizeReview } from "../../lib/localized-review";
+import { useTranslations } from "../../lib/translations";
 import RatingDisplay from "./RatingDisplay";
 
 interface ReviewListProps {
@@ -16,10 +18,17 @@ export default function ReviewList({
   onDelete, 
   currentUserId 
 }: ReviewListProps) {
+  const { t, language } = useTranslations();
+  const dateLocales = {
+    ru: "ru-RU",
+    en: "en-US",
+    pl: "pl-PL",
+  } as const;
+
   if (reviews.length === 0) {
     return (
       <div className="text-center py-8 text-[var(--muted)]">
-        Пока нет отзывов. Будьте первым!
+        {t("reviews.empty")}
       </div>
     );
   }
@@ -27,8 +36,9 @@ export default function ReviewList({
   return (
     <div className="space-y-4">
       {reviews.map((review) => {
+        const localizedReview = localizeReview(review, language);
         const isOwner = currentUserId === review.userId;
-        const date = new Date(review.createdAt).toLocaleDateString("ru-RU", {
+        const date = new Date(review.createdAt).toLocaleDateString(dateLocales[language], {
           year: "numeric",
           month: "long",
           day: "numeric"
@@ -43,14 +53,14 @@ export default function ReviewList({
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="font-semibold">
-                    {review.userName || "Анонимный пользователь"}
+                    {review.userName || t("reviews.anonymousUser")}
                   </div>
                   <RatingDisplay rating={review.rating} size="sm" />
                   <span className="text-sm text-[var(--muted)]">{date}</span>
                 </div>
-                {review.comment && (
+                {localizedReview.displayComment && (
                   <p className="text-[var(--foreground)] whitespace-pre-wrap">
-                    {review.comment}
+                    {localizedReview.displayComment}
                   </p>
                 )}
               </div>
@@ -61,7 +71,7 @@ export default function ReviewList({
                       onClick={() => onEdit(review)}
                       className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
                     >
-                      Редактировать
+                      {t("reviews.edit")}
                     </button>
                   )}
                   {onDelete && (
@@ -69,7 +79,7 @@ export default function ReviewList({
                       onClick={() => onDelete(review.id)}
                       className="text-sm text-red-400 hover:text-red-300 transition-colors"
                     >
-                      Удалить
+                      {t("reviews.delete")}
                     </button>
                   )}
                 </div>
@@ -81,4 +91,3 @@ export default function ReviewList({
     </div>
   );
 }
-

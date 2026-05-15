@@ -3,6 +3,7 @@
 import { useCart } from "../cart-context";
 import { useAuth } from "../auth-context";
 import { useTranslations } from "../../lib/translations";
+import { localizeBook } from "../../lib/localized-book";
 import { useEffect, useState } from "react";
 import { Book } from "../../types/book";
 import { fetchJson } from "../../lib/api";
@@ -10,13 +11,14 @@ import Link from "next/link";
 import OrderConfirmationModal from "../components/OrderConfirmationModal";
 
 export default function CartPage() {
-  const { state, add, remove, clear, count, loading: cartLoading, error: cartError } = useCart();
+  const { state, add, remove, clear, loading: cartLoading, error: cartError } = useCart();
   const { isAuthenticated } = useAuth();
-  const { t } = useTranslations();
+  const { t, language } = useTranslations();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const cartErrorText = t('cart.error');
 
   // Загружаем данные книг для отображения в корзине
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function CartPage() {
         
         setBooks(cartBooks);
       } catch (err) {
-        setError(err instanceof Error ? err.message : t('cart.error'));
+        setError(err instanceof Error ? err.message : cartErrorText);
       } finally {
         setLoading(false);
       }
@@ -45,7 +47,7 @@ export default function CartPage() {
     } else {
       setLoading(false);
     }
-  }, [state.items]);
+  }, [state.items, cartErrorText]);
 
   const updateQuantity = async (bookId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -163,6 +165,7 @@ export default function CartPage() {
               {state.items.map((item) => {
                 const book = getBookById(item.bookId);
                 if (!book) return null;
+                const localizedBook = localizeBook(book, language);
 
                 return (
                   <div key={item.bookId} className="bg-[var(--card)] border border-white/10 rounded-lg p-6">
@@ -170,24 +173,25 @@ export default function CartPage() {
                       {/* Обложка книги */}
                       <div className="w-20 h-28 bg-gradient-to-br from-blue-500 to-purple-600 rounded flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
                         {book.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img 
                             src={book.imageUrl} 
-                            alt={book.title} 
+                            alt={localizedBook.displayTitle} 
                             className="w-full h-full object-cover rounded"
                           />
                         ) : (
-                          <span>{book.title.charAt(0).toUpperCase()}</span>
+                          <span>{localizedBook.displayTitle.charAt(0).toUpperCase()}</span>
                         )}
                       </div>
 
                       {/* Информация о книге */}
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-[var(--foreground)] mb-1 truncate">
-                          {book.title}
+                          {localizedBook.displayTitle}
                         </h3>
-                        <p className="text-[var(--muted)] mb-2">{t('cart.author')}: {book.author}</p>
+                        <p className="text-[var(--muted)] mb-2">{t('cart.author')}: {localizedBook.displayAuthor}</p>
                         <p className="text-[var(--muted)] text-sm mb-3">
-                          {book.publishedYear} • {book.pageCount} {t('cart.pages')} • {book.language}
+                          {book.publishedYear} • {book.pageCount} {t('cart.pages')} • {localizedBook.displayLanguage}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-xl font-bold text-[var(--accent)]">
@@ -317,6 +321,7 @@ export default function CartPage() {
         }}
         totalAmount={getTotalPrice()}
         totalItems={getTotalItems()}
+        books={books}
       />
     </div>
   );
