@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
-function mapToAdminBook(b: any) {
+type BackendBookPayload = Record<string, unknown>;
+
+function mapToAdminBook(b: BackendBookPayload) {
   return {
-    id: b.id,
-    title: b.title,
-    author: b.author,
-    description: b.description ?? "",
-    isbn: b.isbn ?? "",
+    id: String(b.id ?? ""),
+    title: String(b.title ?? ""),
+    author: String(b.author ?? ""),
+    description: String(b.description ?? ""),
+    isbn: String(b.isbn ?? ""),
     publishedYear: Number(b.publishing ?? b.publishedYear ?? new Date().getFullYear()),
-    genre: b.genre ?? "Other",
-    language: b.language ?? "Russian",
+    genre: String(b.genre ?? "Other"),
+    language: String(b.language ?? "Russian"),
     pageCount: Number(b.pageCount ?? 0),
     price: Number(b.price ?? 0),
-    imageUrl: b.imageUrl ?? b.coverImageUrl ?? "",
-    isAvailable: b.isAvailable ?? true,
+    imageUrl: String(b.imageUrl ?? b.coverImageUrl ?? ""),
+    isAvailable: typeof b.isAvailable === "boolean" ? b.isAvailable : true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -21,7 +23,7 @@ function mapToAdminBook(b: any) {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { bookId: string } }
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -30,7 +32,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Токен не предоставлен' }, { status: 401 });
     }
 
-    const { bookId } = params;
+    const { bookId } = await params;
     const body = await request.json();
 
     if (!bookId) {
@@ -93,7 +95,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { bookId: string } }
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -102,7 +104,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Токен не предоставлен' }, { status: 401 });
     }
 
-    const { bookId } = params;
+    const { bookId } = await params;
 
     if (!bookId) {
       return NextResponse.json({ error: 'ID книги не указан' }, { status: 400 });

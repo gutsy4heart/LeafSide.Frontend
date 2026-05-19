@@ -193,17 +193,17 @@ export default function AdminPage() {
         throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке пользователей');
       }
       
-      const data = await safeJsonParse(response);
+      const data = await safeJsonParse(response) as UserWithRole[];
       console.log('Admin: Users data received:', data);
       setUsers(data);
       
       // Рассчитываем статистику
       const totalUsers = data.length;
-      const adminUsers = data.filter((user: any) => 
+      const adminUsers = data.filter((user) =>
         user.roles && Array.isArray(user.roles) && user.roles.includes('Admin')
       ).length;
       const regularUsers = totalUsers - adminUsers;
-      const recentUsers = data.filter((user: any) => {
+      const recentUsers = data.filter((user) => {
         const createdAt = new Date(user.createdAt);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
@@ -285,15 +285,17 @@ export default function AdminPage() {
 
       if (!response.ok) {
         const errorData = await safeJsonParse(response);
-        console.error('Admin: Orders error response:', errorData);
-        throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке заказов');
+        const message = errorData.error || errorData.message || 'Ошибка при загрузке заказов';
+        console.warn('Admin: Orders error response:', message);
+        setOrdersError(message);
+        return;
       }
       
       const data = await safeJsonParse(response);
       console.log('Admin: Orders data received:', data);
       setOrders(data);
     } catch (err) {
-      console.error('Admin: Error fetching orders:', err);
+      console.warn('Admin: Error fetching orders:', err);
       setOrdersError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setOrdersLoading(false);
@@ -327,11 +329,11 @@ export default function AdminPage() {
         throw new Error(errorData.error || errorData.message || 'Ошибка при загрузке корзин');
       }
       
-      const data = await safeJsonParse(response);
+      const data = await safeJsonParse(response) as AdminCart[];
       console.log('Admin: Carts data received:', data);
       
       // Обогащаем данные корзин информацией о пользователях
-      const enrichedCarts = data.map((cart: any) => {
+      const enrichedCarts = data.map((cart) => {
         const user = users.find(u => u.id === cart.userId);
         return {
           ...cart,

@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5233';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log('API route /api/orders/[id]/confirm-delivery PUT вызван');
@@ -18,7 +18,7 @@ export async function PUT(
     }
 
     const token = authHeader.substring(7);
-    const orderId = params.id;
+    const { id: orderId } = await params;
 
     if (!orderId) {
       return NextResponse.json(

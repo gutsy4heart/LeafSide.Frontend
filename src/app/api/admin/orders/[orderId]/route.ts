@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5233';
+const BACKEND_URL =
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  'http://localhost:5233';
+
+async function readBackendError(response: Response, fallback: string) {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    const errorData = await response.json().catch(() => ({}));
+    return errorData.error || errorData.message || fallback;
+  }
+
+  const text = await response.text().catch(() => '');
+  return text || `${fallback}: ${response.status} ${response.statusText}`;
+}
 
 export async function GET(
   request: NextRequest,
@@ -23,8 +38,8 @@ export async function GET(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json({ error: errorData.message || 'Failed to fetch order' }, { status: response.status });
+      const error = await readBackendError(response, 'Failed to fetch order');
+      return NextResponse.json({ error }, { status: response.status });
     }
 
     const data = await response.json();
@@ -68,16 +83,9 @@ export async function PUT(
     console.log('Content-Type бэкенда:', response.headers.get('content-type'));
 
     if (!response.ok) {
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        const errorData = await response.json();
-        console.error('Ошибка бэкенда (JSON):', errorData);
-        return NextResponse.json({ error: errorData.message || 'Failed to update order' }, { status: response.status });
-      } else {
-        const text = await response.text();
-        console.error('Ошибка бэкенда (не JSON):', text.substring(0, 200));
-        return NextResponse.json({ error: `Ошибка бэкенда: ${text.substring(0, 100)}` }, { status: response.status });
-      }
+      const error = await readBackendError(response, 'Failed to update order');
+      console.error('Ошибка бэкенда:', error);
+      return NextResponse.json({ error }, { status: response.status });
     }
 
     const contentType = response.headers.get('content-type');
@@ -117,8 +125,8 @@ export async function DELETE(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      return NextResponse.json({ error: errorData.message || 'Failed to delete order' }, { status: response.status });
+      const error = await readBackendError(response, 'Failed to delete order');
+      return NextResponse.json({ error }, { status: response.status });
     }
 
     return NextResponse.json({ success: true });

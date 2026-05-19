@@ -3,7 +3,7 @@
 import { useTranslations } from "../../../lib/translations";
 
 interface ActionButtonsProps {
-  activeTab: 'users' | 'books' | 'orders' | 'carts';
+  activeTab: 'users' | 'books' | 'orders' | 'carts' | 'reviews';
   loading: boolean;
   booksLoading: boolean;
   ordersLoading: boolean;

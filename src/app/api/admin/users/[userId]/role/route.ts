@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -11,7 +11,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Токен не предоставлен' }, { status: 401 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     const body = await request.json();
 
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5233';

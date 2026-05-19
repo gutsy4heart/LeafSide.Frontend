@@ -10,7 +10,7 @@ interface Stats {
 }
 
 interface StatsProps {
-  activeTab: 'users' | 'books' | 'orders' | 'carts';
+  activeTab: 'users' | 'books' | 'orders' | 'carts' | 'reviews';
   stats: Stats;
   booksCount: number;
   ordersCount: number;

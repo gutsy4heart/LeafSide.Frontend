@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useAuth } from '../auth-context';
 import { useTranslations } from '../../lib/translations';
 
@@ -18,7 +18,11 @@ interface Order {
   userId: string;
   status: string;
   totalAmount: number;
+  deliveryFee?: number;
   shippingAddress?: string;
+  deliveryMethod?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string;
@@ -39,7 +43,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     if (!token) {
       setError(t('orders.loadError'));
       setLoading(false);
@@ -104,7 +108,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [checkAndRefreshToken, t, token]);
 
   const confirmDelivery = async (orderId: string) => {
     if (!token) {
@@ -163,7 +167,7 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
 
   useEffect(() => {
     loadOrders();
-  }, [token]);
+  }, [loadOrders]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -206,6 +210,28 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
         return t('orders.statusCancelled');
       default:
         return status;
+    }
+  };
+
+  const getDeliveryMethodText = (method?: string) => {
+    switch (method) {
+      case 'express':
+        return t('orderConfirmation.deliveryExpress');
+      case 'standard':
+        return t('orderConfirmation.deliveryStandard');
+      default:
+        return method || t('orderConfirmation.deliveryStandard');
+    }
+  };
+
+  const getPaymentMethodText = (method?: string) => {
+    switch (method) {
+      case 'cardOnDelivery':
+        return t('orderConfirmation.paymentCard');
+      case 'cashOnDelivery':
+        return t('orderConfirmation.paymentCash');
+      default:
+        return method || t('orderConfirmation.paymentCash');
     }
   };
 
@@ -302,6 +328,14 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
                       {order.totalAmount.toFixed(2)} €
                     </span>
                   </div>
+                  <div className="text-sm">
+                    <span className="text-[var(--muted)]">{t('orderConfirmation.deliveryMethod')}: </span>
+                    <span className="text-[var(--foreground)] font-medium">{getDeliveryMethodText(order.deliveryMethod)}</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-[var(--muted)]">{t('orderConfirmation.paymentMethod')}: </span>
+                    <span className="text-[var(--foreground)] font-medium">{getPaymentMethodText(order.paymentMethod)}</span>
+                  </div>
                 </div>
               </div>
 
@@ -349,6 +383,12 @@ export default function OrdersList({ onOrderClick }: OrdersListProps) {
                     </div>
                   </div>
                 ))}
+                {order.shippingAddress && (
+                  <div className="border-t border-white/10 pt-3 text-sm">
+                    <span className="text-[var(--muted)]">{t('orderConfirmation.shippingAddress')}: </span>
+                    <span className="text-[var(--foreground)]">{order.shippingAddress}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

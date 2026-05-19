@@ -8,7 +8,11 @@ const ORIGIN = process.env.NEXT_PUBLIC_ORIGIN || "http://localhost:3000";
 export async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 	const normalizedPath = path.startsWith("/") ? path : `/${path}`;
 	const isInternalApi = normalizedPath.startsWith("/api/");
-	const url = isInternalApi ? `${ORIGIN}${normalizedPath}` : `${BASE_URL}${normalizedPath}`;
+	const url = isInternalApi
+		? typeof window === "undefined"
+			? `${ORIGIN}${normalizedPath}`
+			: normalizedPath
+		: `${BASE_URL}${normalizedPath}`;
 	const res = await fetch(url, {
 		...init,
 		headers: {
@@ -23,4 +27,3 @@ export async function fetchJson<T>(path: string, init?: RequestInit): Promise<T>
 	}
 	return res.json();
 }
-

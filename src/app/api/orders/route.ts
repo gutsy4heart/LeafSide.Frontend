@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
   try {
     console.log('API route /api/orders вызван');
     const body = await request.json();
-    const { items, totalAmount, customerName, customerEmail, customerPhone, shippingAddress, notes } = body;
-    console.log('Получены данные:', { items, totalAmount, customerName, customerEmail, customerPhone, shippingAddress, notes });
+    const { items, totalAmount, deliveryFee, customerName, customerEmail, customerPhone, shippingAddress, deliveryMethod, paymentMethod, notes } = body;
+    console.log('Получены данные:', { items, totalAmount, deliveryFee, customerName, customerEmail, customerPhone, shippingAddress, deliveryMethod, paymentMethod, notes });
 
     // Получаем токен из заголовков
     const authHeader = request.headers.get('authorization');
@@ -61,6 +61,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!deliveryMethod || !String(deliveryMethod).trim()) {
+      return NextResponse.json(
+        { error: 'Способ доставки обязателен' },
+        { status: 400 }
+      );
+    }
+
+    if (!paymentMethod || !String(paymentMethod).trim()) {
+      return NextResponse.json(
+        { error: 'Способ оплаты обязателен' },
+        { status: 400 }
+      );
+    }
+
     // Подготавливаем данные для отправки на бэкенд
     const orderData = {
       items: (items as OrderItemPayload[]).map((item) => ({
@@ -68,10 +82,13 @@ export async function POST(request: NextRequest) {
         quantity: item.quantity
       })),
       totalAmount,
+      deliveryFee: Number(deliveryFee) || 0,
       customerName: String(customerName).trim(),
       customerEmail: String(customerEmail).trim(),
       customerPhone: customerPhone ? String(customerPhone).trim() : null,
       shippingAddress: String(shippingAddress).trim(),
+      deliveryMethod: String(deliveryMethod).trim(),
+      paymentMethod: String(paymentMethod).trim(),
       notes: notes ? String(notes).trim() : null
     };
 
@@ -93,7 +110,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.message || 'Ошибка при создании заказа' },
+        { error: errorData.error || errorData.message || 'Ошибка при создании заказа' },
         { status: response.status }
       );
     }
@@ -105,9 +122,13 @@ export async function POST(request: NextRequest) {
       order: {
         id: order.id,
         totalAmount: order.totalAmount,
+        deliveryFee: order.deliveryFee,
         status: order.status,
         createdAt: order.createdAt,
         shippingAddress: order.shippingAddress,
+        deliveryMethod: order.deliveryMethod,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
         customerName: order.customerName,
         customerEmail: order.customerEmail,
         customerPhone: order.customerPhone,

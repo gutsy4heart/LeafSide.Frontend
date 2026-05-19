@@ -14,9 +14,9 @@ const CANDIDATES = [
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
   const errors: Array<{ url: string; error: string }> = [];
 
   for (const base of CANDIDATES) {
@@ -57,5 +57,4 @@ export async function GET(
     { status: 502 }
   );
 }
-
 

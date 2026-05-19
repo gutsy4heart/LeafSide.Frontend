@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { userId: string } }
+  { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -11,7 +11,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Токен не предоставлен' }, { status: 401 });
     }
 
-    const { userId } = params;
+    const { userId } = await params;
     
     if (!userId) {
       return NextResponse.json({ error: 'ID пользователя не указан' }, { status: 400 });

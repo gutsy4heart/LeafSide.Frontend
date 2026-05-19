@@ -3,7 +3,11 @@ export interface Order {
   userId: string;
   status: string;
   totalAmount: number;
+  deliveryFee?: number;
   shippingAddress: string;
+  deliveryMethod?: string;
+  paymentMethod?: string;
+  paymentStatus?: string;
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
